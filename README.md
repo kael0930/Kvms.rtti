@@ -1,5 +1,5 @@
 - Just personal hobbies . 
-- Implementation from Qt source code, but do not rely on the new rtti as well as metadata and variant 。
+- Implementation from Qt source code, but do not rely on the new RTTI as well as metadata and variant 。
 
 Kvms is a product of VMS Tech (see http://www.chinavms.com).  Kvms is
 released in two different editions:
