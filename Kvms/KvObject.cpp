@@ -24,10 +24,10 @@ KvObject::KvObject(KvObject *parent /*= 0*/)
 
 KvObject::~KvObject()
 {
-	//K_D(KvObject)
+	K_D(KvObject)
 
-	d_func()->wasDeleted = true;
-	d_func()->blockSig = 0; // unblock signals so we always emit destroyed()
+	d->wasDeleted = true;
+	d->blockSig = 0; // unblock signals so we always emit destroyed()
 }
 
 bool KvObject::event(KvEvent *)
@@ -42,23 +42,23 @@ bool KvObject::eventFilter(KvObject *, KvEvent *)
 
 KvString KvObject::objectName() const
 {
-	//K_D(KvObject)
+	K_D(KvObject)
 
-	return d_func()->objectName;
+	return d->objectName;
 }
 
 void KvObject::setObjectName(const KvString &name)
 {
-	//K_D(KvObject)
+	K_D(KvObject)
 
-	d_func()->objectName = name;
+	d->objectName = name;
 }
 
 void KvObject::setParent(KvObject *parent)
 {
-	//K_D(KvObject)
+	K_D(KvObject)
 
-	d_func()->setParent_helper(parent);
+	d->setParent_helper(parent);
 }
 
 bool KvObject::setProperty(const char *name, const KvVariant &value)
@@ -119,16 +119,16 @@ void KvObject::removeEventFilter(KvObject *)
 
 KvObject * KvObject::sender() const
 {
-	//K_D(KvObject)
+	K_D(KvObject)
 
 	//locker TODO
-	if (!d_func()->currentSender)
+	if (!d->currentSender)
 		return 0;
-	for (KvObjectPrivate::Connection * c = d_func()->senders; c; c->next)
+	for (KvObjectPrivate::Connection * c = d->senders; c; c->next)
 	{
-		if (c->sender == d_func()->currentSender->sender)
+		if (c->sender == d->currentSender->sender)
 		{
-			return d_func()->currentSender->sender;
+			return d->currentSender->sender;
 		}
 	}
 
@@ -265,9 +265,9 @@ void KvObjectPrivate::setParent_helper(KvObject *)
 
 int KvObjectPrivate::signalIndex(const char *signalName) const
 {
-	//K_Q(KvObject)
+	K_Q(KvObject)
 
-	const KvMetaObject *base = q_func()->metaObject();
+	const KvMetaObject *base = q->metaObject();
 	int relative_index = KvMetaObjectPrivate::indexOfSignalRelative(&base, signalName, false);
 	if (relative_index < 0)
 		relative_index = KvMetaObjectPrivate::indexOfSignalRelative(&base, signalName, true);

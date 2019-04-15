@@ -88,12 +88,12 @@ static inline typename Wrapper::pointer kGetPtrHelper(const Wrapper &p) { return
 
 #define K_DECLARE_PRIVATE(Class) \
 	inline Class##Private * d_func() { return reinterpret_cast<Class##Private *>(kGetPtrHelper(d_ptr)); } \
-	inline const Class##Private * d_func() const { return reinterpret_cast<const Class##Private *>(kGetPtrHelper(d_ptr)); } \
-	friend class Class##Private; \
+	inline /*const*/ Class##Private * d_func() const { return reinterpret_cast</*const*/ Class##Private *>(kGetPtrHelper(d_ptr)); } \
+	friend class Class##Private; 
 
 #define K_DECLARE_PUBLIC(Class) \
 	inline Class *q_func() { return static_cast<Class *>(q_ptr); } \
-	inline const Class *q_func() const { return static_cast<const Class *>(q_ptr); } \
+	inline /*const*/ Class *q_func() const { return static_cast</*const*/ Class *>(q_ptr); } \
 	friend class Class; 
 
 #define K_D(Class) Class##Private * const d = d_func();
