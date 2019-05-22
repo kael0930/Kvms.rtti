@@ -12,7 +12,8 @@ TEST(KvRttiTest, Property)
 
 	KvVariant v = obj->property("objectName");
 	KvString s = v.toString();
-	obj->setProperty("objectName", KvString("123"));
+	obj->setProperty("objectName", KvString("Kvobject"));
 	v = obj->property("objectName");
 	s = v.toString();
+	int i = 0;
 }

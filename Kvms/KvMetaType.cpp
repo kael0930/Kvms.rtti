@@ -26,21 +26,6 @@ static const struct { const char * typeName; int typeNameLength; int type; } typ
 	{ 0, 0, KvMetaType::Void }
 };
 
-inline uint qstrlen(const char *str)
-{
-	return str ? uint(strlen(str)) : 0;
-}
-
-inline uint qstrnlen(const char *str, uint maxlen)
-{
-	uint length = 0;
-	if (str) {
-		while (length < maxlen && *str++)
-			length++;
-	}
-	return length;
-}
-
 /*! \internal
 Similar to type(), but only looks in the static set of types.
 */
@@ -56,7 +41,7 @@ static inline int kMetaTypeStaticType(const char *typeName, int length)
 
 int KvMetaType::type(const char *typeName)
 {
-	int length = qstrlen(typeName);
+	int length = kstrlen(typeName);
 	if (!length)
 		return 0;
 	int type = kMetaTypeStaticType(typeName, length);

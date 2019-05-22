@@ -18,24 +18,51 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="rtti-property.cc">
+    <ClCompile Include="KvUtils.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test-sylixos.cpp">
+    <ClCompile Include="KvList.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="rtti-string.cpp">
+    <ClCompile Include="KvString.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SignalSlotTest.cpp">
+    <ClCompile Include="KvIODevice.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="rtti-signal-slot.cpp">
+    <ClCompile Include="KvByteArray.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="KvVector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SignalSlotTest.h">
+    <ClInclude Include="KvUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvList.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvString.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvIODevice.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvIODevicePrivate.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvByteArray.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvVarLengthArray.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvVector.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

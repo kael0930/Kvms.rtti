@@ -52,7 +52,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../gtest_main;../Kvms</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../gtest_main;../Kvms;../KvGlobal;../KvUtils</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -86,9 +86,19 @@
     <ProjectReference Include="..\Kvms\Kvms.vcxproj">
       <Project>{2f01d10a-5ec3-40e8-8140-a509340b6e3b}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\KvUtils\KvUtils.vcxproj">
+      <Project>{6f330e4f-aad0-4bb2-9a2a-991e22dff1da}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="rtti-property.cc" />
+    <ClCompile Include="rtti-signal-slot.cpp" />
+    <ClCompile Include="rtti-string.cpp" />
+    <ClCompile Include="SignalSlotTest.cpp" />
+    <ClCompile Include="test-sylixos.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SignalSlotTest.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,9 +1,11 @@
 #ifndef KvObject_h__
 #define KvObject_h__
 
-#include "KvGlobal.h"
+#include "Kvms.h"
 #include "KvList.h"
+#include "KvVector.h"
 #include "KvString.h"
+#include "KvByteArray.h"
 #include "KvObjectdefs.h"
 #include "KvScopedPointer.h"
 
@@ -92,30 +94,49 @@ public:
 
 	bool setProperty(const char *name, const KvVariant &value);
 	KvVariant property(const char *name);
-	//QList<QByteArray> dynamicPropertyNames() const;
+	KvList<KvByteArray> dynamicPropertyNames() const;
 
+#ifdef KV_USERDATA
 	static uint registerUserData();
 	void setUserData(uint id, KvObjectUserData* data);
 	KvObjectUserData* userData(uint id) const;
+#endif
 
 	void installEventFilter(KvObject *);
 	void removeEventFilter(KvObject *);
 
 	static bool connect(const KvObject * sender, const char *signal,
-		const KvObject *receiver, const char *member,
+		const KvObject *receiver, const char *method,
 		Kv::ConnectionType = Kv::AutoConnection);
 
 	static bool connect(const KvObject * sender, const KvMetaMethod &signal,
 		const KvObject *receiver, const KvMetaMethod &method,
 		Kv::ConnectionType = Kv::AutoConnection);
 
-	static bool connect(const KvObject *sender, const char *signal,
-		const char *member, Kv::ConnectionType = Kv::AutoConnection);
+	inline bool connect(const KvObject *sender, const char *signal,
+		const char *method, Kv::ConnectionType = Kv::AutoConnection);
 
-Q_SIGNALS:
+	static bool disconnect(const KvObject *sender, const char *signal,
+		const KvObject *receiver, const char *member);
+	static bool disconnect(const KvObject *sender, const KvMetaMethod &signal,
+		const KvObject *receiver, const KvMetaMethod &member);
+	inline bool disconnect(const char *signal = 0,
+		const KvObject *receiver = 0, const char *member = 0)
+	{
+		return disconnect(this, signal, receiver, member);
+	}
+	inline bool disconnect(const KvObject *receiver, const char *member = 0)
+	{
+		return disconnect(this, 0, receiver, member);
+	}
+
+	void dumpObjectTree();
+	void dumpObjectInfo();
+
+K_SIGNALS:
 	void destroyed(KvObject * = 0);
 
-public Q_SLOTS:
+public K_SLOTS:
 	void deleteLater();
 
 protected:
@@ -123,9 +144,11 @@ protected:
 	int senderSignalIndex() const;
 	int recevicers(const char *signal) const;
 
+	virtual void connectNotify(const char *signal) {}
+	virtual void disconnectNotify(const char *signal) {}
+
 protected:
 	KvScopedPointer<KvObjectData> d_ptr;
-
 	//static const KvMetaObject staticKvMetaObject;
 
 	friend struct KvMetaObject;

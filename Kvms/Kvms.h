@@ -1,8 +1,7 @@
 #ifndef Kvms_h__
 #define Kvms_h__
 
-#define K_DECL_EXPORT     __declspec(dllexport)
-#define K_DECL_IMPORT     __declspec(dllimport)
+#include "KvGlobal.h"
 
 #if defined(KVAPI_LIBRARY)
 #  define KV_CORE_EXPORT K_DECL_EXPORT

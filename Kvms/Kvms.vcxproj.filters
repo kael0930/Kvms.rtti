@@ -21,25 +21,13 @@
     <ClInclude Include="KvObject.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="KvGlobal.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="KvObjectdefs.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="KvScopedPointer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="KvString.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="KvObjectPrivate.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="KvList.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="KvNameSpace.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="KvVariant.h">
@@ -63,15 +51,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KvObject.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="KvGlobal.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="KvString.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="KvList.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="KvVariant.cpp">

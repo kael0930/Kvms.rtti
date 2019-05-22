@@ -1,7 +1,7 @@
 #ifndef KvMetaType_h__
 #define KvMetaType_h__
 
-#include "KvGlobal.h"
+#include "Kvms.h"
 
 class KV_CORE_EXPORT KvMetaType
 {

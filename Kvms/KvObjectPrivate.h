@@ -1,12 +1,13 @@
 #ifndef KvObjectPrivate_h__
 #define KvObjectPrivate_h__
 
-#include "KvGlobal.h"
-#include "KvObject.h"
 #include "KvList.h"
 #include "KvString.h"
 
 #include <atomic>
+
+class KvObject;
+class ConnectionListVector;
 
 struct KvSignalSpyCallbackSet
 {
@@ -31,33 +32,54 @@ public:
 		ExtraData() { }
 	};
 
+	typedef void(*StaticMetaCallFunction)(KvObject *, KvMetaObject::Call, int, void **);
 	struct Connection
 	{
 		KvObject *sender;
 		KvObject *receiver;
-
+		StaticMetaCallFunction callFunction;
+		// The next pointer for the singly-linked ConnectionList
+		Connection *nextConnectionList;
+		//senders linked list
 		Connection *next;
-		Connection *prev;
+		Connection **prev;
 		std::atomic<int*> argumentTypes;
 
 		ushort method_offset;
 		ushort method_relative;
 		ushort connectionType : 3; // 0 == auto, 1 == direct, 2 == queued, 4 == blocking
 		~Connection();
+		int method() const { return method_offset + method_relative; }
+
+	};
+	// ConnectionList is a singly-linked list
+	struct ConnectionList {
+		ConnectionList() : first(0), last(0) {}
+		Connection *first;
+		Connection *last;
 	};
 
 	struct Sender
 	{
 		KvObject *sender;
+		int signal;
+		int ref;
 	};
 
 	KvObjectPrivate(int version = 0x010000);
 	virtual ~KvObjectPrivate();
-
 	void deleteChildren();
 
 	void setParent_helper(KvObject *);
 
+	void addConnection(int signal, Connection *c);
+	void cleanConnectionLists();
+
+	static inline Sender *setCurrentSender(KvObject *receiver,
+		Sender *sender);
+	static inline void resetCurrentSender(KvObject *receiver,
+		Sender *currentSender,
+		Sender *previousSender);
 
 	static KvObjectPrivate *get(KvObject *o) {
 		return o->d_func();
@@ -70,6 +92,8 @@ public:
 	KvString objectName;
 	ExtraData *extraData;    // extra data set by the user
 	//QThreadData *threadData; // id of the thread that owns the object
+
+	ConnectionListVector *connectionLists;
 
 	Connection *senders;     // linked list of connections connected to this object
 	Sender *currentSender;   // object currently activating the object
@@ -87,5 +111,26 @@ inline bool KvObjectPrivate::isSignalConnected(uint signal_index) const
 		|| kv_signal_spy_callback_set.signal_begin_callback
 		|| kv_signal_spy_callback_set.signal_end_callback);
 }
+
+inline KvObjectPrivate::Sender *KvObjectPrivate::setCurrentSender(KvObject *receiver,
+	Sender *sender)
+{
+	Sender *previousSender = receiver->d_func()->currentSender;
+	receiver->d_func()->currentSender = sender;
+	return previousSender;
+}
+
+inline void KvObjectPrivate::resetCurrentSender(KvObject *receiver,
+	Sender *currentSender,
+	Sender *previousSender)
+{
+	// ref is set to zero when this object is deleted during the metacall
+	if (currentSender->ref == 1)
+		receiver->d_func()->currentSender = previousSender;
+	// if we've recursed, we need to tell the caller about the objects deletion
+	if (previousSender)
+		previousSender->ref = currentSender->ref;
+}
+
 
 #endif // KvObjectPrivate_h__

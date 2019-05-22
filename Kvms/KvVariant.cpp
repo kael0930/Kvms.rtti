@@ -28,10 +28,10 @@ static void construct(KvVariant::Private *x, const void *copy)
 		x->data.o = copy ? *static_cast<KvObject *const*>(copy) : 0;
 		break;
 	case KvVariant::LongLong:
-		x->data.ll = copy ? *static_cast<const qlonglong *>(copy) : Q_INT64_C(0);
+		x->data.ll = copy ? *static_cast<const qlonglong *>(copy) : K_INT64_C(0);
 		break;
 	case KvVariant::ULongLong:
-		x->data.ull = copy ? *static_cast<const qulonglong *>(copy) : Q_UINT64_C(0);
+		x->data.ull = copy ? *static_cast<const qulonglong *>(copy) : K_UINT64_C(0);
 		break;
 	case KvVariant::Invalid:
 	case KvVariant::UserType:

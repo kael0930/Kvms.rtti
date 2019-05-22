@@ -2,6 +2,90 @@
 #include "KvMetaObjectPrivate.h"
 #include "KvObject.h"
 #include "KvObjectPrivate.h"
+#include "KvVarLengthArray.h"
+
+//////////////////////////////////////////////////////////////////////////
+
+/** \internal
+* helper function for indexOf{Method,Slot,Signal}, returns the relative index of the method within
+* the baseObject
+* \a MethodType might be MethodSignal or MethodSlot, or 0 to match everything.
+* \a normalizeStringData set to true if we should do a second pass for old moc generated files normalizing all the symbols.
+*/
+template<int MethodType>
+static inline int indexOfMethodRelative(const KvMetaObject **baseObject,
+	const char *method,
+	bool normalizeStringData)
+{
+	for (const KvMetaObject *m = *baseObject; m; m = m->superClass())
+	{
+		int i = (MethodType == Kv::MethodSignal && priv(m->d.data)->revision >= 4)
+			? (priv(m->d.data)->signalCount - 1) : (priv(m->d.data)->methodCount - 1);
+		const int end = (MethodType == Kv::MethodSlot && priv(m->d.data)->revision >= 4)
+			? (priv(m->d.data)->signalCount) : 0;
+		if (!normalizeStringData)
+		{
+			for (; i >= end; --i)
+			{
+				const char *stringdata = m->d.stringdata + m->d.data[priv(m->d.data)->methodData + 5 * i];
+				if (method[0] == stringdata[0] && strcmp(method + 1, stringdata +1) == 0)
+				{
+					*baseObject = m;
+					return i;
+				}
+			}
+		}
+		else if ( priv(m->d.data)->revision < 5)
+		{
+			for (; i >= end; --i)
+			{
+				const char *stringdata = (m->d.stringdata + m->d.data[priv(m->d.data)->methodData + 5 * i]);
+				const KvByteArray normalizedSignature = KvMetaObject::normalizedSignature(stringdata);
+				if (normalizedSignature == method)
+				{
+					*baseObject = m;
+					return i;
+				}
+			}
+		}
+	}
+
+	return -1;
+}
+
+
+int KvMetaObjectPrivate::indexOfSignalRelative(const KvMetaObject **baseObject, const char* signal, bool normalizeStringData)
+{
+	int i = indexOfMethodRelative<Kv::MethodSignal>(baseObject, signal, normalizeStringData);
+	const KvMetaObject *m = *baseObject;
+	if (i >= 0 && m && m->d.superdata) {
+		int conflict = m->d.superdata->indexOfMethod(signal);
+		if (conflict >= 0)
+			printf("KvMetaObject::indexOfSignal: signal %s from %s redefined in %s",
+			signal, m->d.superdata->d.stringdata, m->d.stringdata);
+	}
+	return i;
+}
+
+int KvMetaObjectPrivate::indexOfSlotRelative(const KvMetaObject **m, const char *slot, bool normalizeStringData)
+{
+	return indexOfMethodRelative<Kv::MethodSlot>(m, slot, normalizeStringData);
+}
+
+int KvMetaObjectPrivate::originalClone(const KvMetaObject *mobj, int local_method_index)
+{
+	assert(local_method_index < get(mobj)->methodCount);
+	int handle = get(mobj)->methodData + 5 * local_method_index;
+	while (mobj->d.data[handle+4] & Kv::MethodCloned)
+	{
+		assert(local_method_index >0);
+		handle -= 5;
+		local_method_index--;
+	}
+	return local_method_index;
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 static inline const KvMetaObjectPrivate *priv(const uint* data)
 {
@@ -44,6 +128,17 @@ const KvObject * KvMetaObject::cast(const KvObject *obj) const
 	return 0;
 }
 
+int KvMetaObject::methodOffset() const
+{
+	int offset = 0;
+	const KvMetaObject *m = d.superdata;
+	while (m) {
+		offset += priv(m->d.data)->methodCount;
+		m = m->d.superdata;
+	}
+	return offset;
+}
+
 int KvMetaObject::propertyOffset() const
 {
 	int offset = 0;
@@ -55,6 +150,43 @@ int KvMetaObject::propertyOffset() const
 	}
 
 	return offset;
+}
+
+int KvMetaObject::indexOfMethod(const char *method) const
+{
+	const KvMetaObject *m = this;
+	int i = indexOfMethodRelative<Kv::MethodMethod>(&m, method, false);
+	if (i < 0) {
+		m = this;
+		i = indexOfMethodRelative<Kv::MethodMethod>(&m, method, true);
+	}
+	if (i >= 0)
+		i += m->methodOffset();
+	return i;
+}
+
+int KvMetaObject::indexOfSignal(const char *signal) const
+{
+	const KvMetaObject *m = this;
+	int i = KvMetaObjectPrivate::indexOfSignalRelative(&m, signal, false);
+	if (i < 0) {
+		m = this;
+		i = KvMetaObjectPrivate::indexOfSignalRelative(&m, signal, true);
+	}
+	if (i >= 0)
+		i += m->methodOffset();
+	return i;
+}
+
+int KvMetaObject::indexOfSlot(const char *slot) const
+{
+	const KvMetaObject *m = this;
+	int i = KvMetaObjectPrivate::indexOfSlotRelative(&m, slot, false);
+	if (i < 0)
+		i = KvMetaObjectPrivate::indexOfSlotRelative(&m, slot, true);
+	if (i >= 0)
+		i += m->methodOffset();
+	return i;
 }
 
 int KvMetaObject::indexOfProperty(const char *name) const
@@ -110,6 +242,102 @@ KvMetaProperty KvMetaObject::property(int index) const
 
 		}
 	}
+	return result;
+}
+
+bool KvMetaObject::checkConnectArgs(const char *signal, const char *method)
+{
+	const char *s1 = signal;
+	const char *s2 = method;
+	while (*s1++ != '(') {}                        // scan to first '('
+	while (*s2++ != '(') {}
+	if (*s2 == ')' || kstrcmp(s1, s2) == 0)        // method has no args or
+		return true;                                //   exact match
+	int s1len = kstrlen(s1);
+	int s2len = kstrlen(s2);
+	if (s2len < s1len && strncmp(s1, s2, s2len - 1) == 0 && s1[s2len - 1] == ',')
+		return true;                                // method has less args
+	return false;
+}
+
+#ifndef UTILS_H
+static inline bool is_ident_char(char s)
+{
+	return ((s >= 'a' && s <= 'z')
+		|| (s >= 'A' && s <= 'Z')
+		|| (s >= '0' && s <= '9')
+		|| s == '_'
+		);
+}
+
+static inline bool is_space(char s)
+{
+	return (s == ' ' || s == '\t');
+}
+#endif
+
+static void qRemoveWhitespace(const char *s, char *d)
+{
+	char last = 0;
+	while (*s && is_space(*s))
+		s++;
+	while (*s) {
+		while (*s && !is_space(*s))
+			last = *d++ = *s++;
+		while (*s && is_space(*s))
+			s++;
+		if (*s && ((is_ident_char(*s) && is_ident_char(last))
+			|| ((*s == ':') && (last == '<')))) {
+			last = *d++ = ' ';
+		}
+	}
+	*d = '\0';
+}
+
+static char *qNormalizeType(char *d, int &templdepth, KvByteArray &result)
+{
+	const char *t = d;
+	while (*d && (templdepth
+		|| (*d != ',' && *d != ')'))) {
+		if (*d == '<')
+			++templdepth;
+		if (*d == '>')
+			--templdepth;
+		++d;
+	}
+	//if (strncmp("void", t, d - t) != 0)
+	//	result += normalizeTypeInternal(t, d);
+
+	return d;
+}
+
+KvByteArray KvMetaObject::normalizedSignature(const char *method)
+{
+	KvByteArray result;
+	if (!method || !*method)
+		return result;
+	int len = int(strlen(method));
+	KvVarLengthArray<char> stackbuf(len + 1);
+	char *d = stackbuf.data();
+	qRemoveWhitespace(method, d);
+
+	result.reserve(len);
+
+	int argdepth = 0;
+	int templdepth = 0;
+	while (*d) {
+		if (argdepth == 1) {
+			d = qNormalizeType(d, templdepth, result);
+			if (!*d) //most likely an invalid signature.
+				break;
+		}
+		if (*d == '(')
+			++argdepth;
+		if (*d == ')')
+			--argdepth;
+		result += *d++;
+	}
+
 	return result;
 }
 
@@ -355,21 +583,4 @@ bool KvMetaProperty::write(KvObject *obj, const KvVariant &value) const
 		argv[0] = v.data();
 	KvMetaObject::metacall(obj, KvMetaObject::WriteProperty, idx + mobj->propertyOffset(), argv);
 	return status;
-}
-
-//////////////////////////////////////////////////////////////////////////
-
-int KvMetaObjectPrivate::indexOfSignalRelative(const KvMetaObject **baseObject, const char* name, bool normalizeStringData)
-{
-	return -1;
-}
-
-int KvMetaObjectPrivate::indexOfSlotRelative(const KvMetaObject **m, const char *slot, bool normalizeStringData)
-{
-	return -1;
-}
-
-int KvMetaObjectPrivate::originalClone(const KvMetaObject *obj, int local_method_index)
-{
-	return -1;
 }

@@ -18,24 +18,21 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="rtti-property.cc">
+    <ClCompile Include="KvGlobal.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test-sylixos.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="rtti-string.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="SignalSlotTest.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="rtti-signal-slot.cpp">
+    <ClCompile Include="KvMalloc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SignalSlotTest.h">
+    <ClInclude Include="KvGlobal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvNameSpace.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvPlatformdefs.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

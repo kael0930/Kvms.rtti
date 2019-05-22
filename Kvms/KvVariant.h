@@ -1,7 +1,7 @@
 #ifndef KvVariant_h__
 #define KvVariant_h__
 
-#include "KvGlobal.h"
+#include "Kvms.h"
 #include "KvString.h"
 #include "KvMetaType.h"
 

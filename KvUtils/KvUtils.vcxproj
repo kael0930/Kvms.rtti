@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2F01D10A-5EC3-40E8-8140-A509340B6E3B}</ProjectGuid>
+    <ProjectGuid>{6F330E4F-AAD0-4BB2-9A2A-991E22DFF1DA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Kvms</RootNamespace>
+    <RootNamespace>KvUtils</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -23,7 +23,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -47,32 +47,30 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;KVAPI_LIBRARY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessToFile>false</PreprocessToFile>
-      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <AdditionalIncludeDirectories>../KvUtils;../KvGlobal</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KVUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../KvGlobal</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;KVUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -82,30 +80,27 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="KvMetaObject.h" />
-    <ClInclude Include="KvMetaObjectPrivate.h" />
-    <ClInclude Include="KvMetaType.h" />
-    <ClInclude Include="Kvms.h" />
-    <ClInclude Include="KvObject.h" />
-    <ClInclude Include="KvObjectdefs.h" />
-    <ClInclude Include="KvObjectPrivate.h" />
-    <ClInclude Include="KvScopedPointer.h" />
-    <ClInclude Include="KvVariant.h" />
-    <ClInclude Include="KvVariantPrivate.h" />
+    <ClCompile Include="KvByteArray.cpp" />
+    <ClCompile Include="KvIODevice.cpp" />
+    <ClCompile Include="KvList.cpp" />
+    <ClCompile Include="KvString.cpp" />
+    <ClCompile Include="KvUtils.cpp" />
+    <ClCompile Include="KvVector.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="KvMetaObject.cpp" />
-    <ClCompile Include="KvMetaType.cpp" />
-    <ClCompile Include="Kvms.cpp" />
-    <ClCompile Include="KvObject.cpp" />
-    <ClCompile Include="KvVariant.cpp" />
+    <ClInclude Include="KvByteArray.h" />
+    <ClInclude Include="KvIODevice.h" />
+    <ClInclude Include="KvIODevicePrivate.h" />
+    <ClInclude Include="KvList.h" />
+    <ClInclude Include="KvString.h" />
+    <ClInclude Include="KvUtils.h" />
+    <ClInclude Include="KvVarLengthArray.h" />
+    <ClInclude Include="KvVector.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KvGlobal\KvGlobal.vcxproj">
       <Project>{78b835fa-3dc5-4f10-aa8f-29061655f9d6}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\KvUtils\KvUtils.vcxproj">
-      <Project>{6f330e4f-aad0-4bb2-9a2a-991e22dff1da}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

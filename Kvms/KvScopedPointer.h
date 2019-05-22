@@ -1,7 +1,7 @@
 #ifndef KvScopedPointer_h__
 #define KvScopedPointer_h__
 
-#include "KvGlobal.h"
+#include "Kvms.h"
 
 template<typename T>
 struct KvScopedPointerDeleter
@@ -34,12 +34,12 @@ public:
 		 this->d = 0;
 	}
 	
-	inline T &operator*() const
+	inline T& operator*() const
 	{
 		return *d;
 	}
 
-	inline T *operator->() const
+	inline T* operator->() const
 	{
 		return d;
 	}

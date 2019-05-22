@@ -27,6 +27,27 @@ namespace Kv{
 		Revisioned = 0x00800000
 	};
 
+	enum MethodFlags  {
+		AccessPrivate = 0x00,
+		AccessProtected = 0x01,
+		AccessPublic = 0x02,
+		AccessMask = 0x03, //mask
+
+		MethodMethod = 0x00,
+		MethodSignal = 0x04,
+		MethodSlot = 0x08,
+		MethodConstructor = 0x0c,
+		MethodTypeMask = 0x0c,
+
+		MethodCompatibility = 0x10,
+		MethodCloned = 0x20,
+		MethodScriptable = 0x40,
+		MethodRevisioned = 0x80
+	};
+
+	enum MetaObjectFlags {
+		DynamicMetaObject = 0x01
+	};
 
 	enum ConnectionType {
 		AutoConnection,
@@ -35,6 +56,18 @@ namespace Kv{
 		AutoCompatConnection,
 		BlockingQueuedConnection,
 		UniqueConnection = 0x80
+	};
+
+	enum OpenMode
+	{
+		NotOpen = 0x0000,
+		ReadOnly = 0x0001,
+		WriteOnly = 0x0002,
+		ReadWrite = ReadOnly | WriteOnly,
+		Append = 0x0004,
+		Truncate = 0x0008,
+		Text = 0x0010,
+		Unbuffered = 0x0020
 	};
 }
 
