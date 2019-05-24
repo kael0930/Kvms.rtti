@@ -15,7 +15,7 @@ K_PROPERTY:
 	bool isEnabled() const;
 	void setEnabled(bool enabled);
 
-/*signals*/public:
+K_SIGNALS:
 	void enabledStateChanged(SignalSlotTest *);
 
 public slots:

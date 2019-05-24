@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <stddef.h>
 
-#include <windows.h>
+#include <windows.h>	//switch 语句包含“default”标签但未包含“case”标签;
 
 #define K_DECL_EXPORT     __declspec(dllexport)
 #define K_DECL_IMPORT     __declspec(dllimport)
@@ -80,7 +80,7 @@ typedef unsigned long ulong;
 #   define signals	protected
 # endif
 # define K_SLOTS
-# define K_SIGNALS protected
+# define K_SIGNALS public
 # define K_PROPERTY public
 # define K_PRIVATE_SLOT(d, signature)
 # define K_EMI

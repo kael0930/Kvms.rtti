@@ -57,92 +57,6 @@ KV_CORE_EXPORT const char *kvFlagLocation(const char *method);
 #define QSLOT_CODE    1
 #define QSIGNAL_CODE  2
 
-#define KV_BEGINE_MOC_NAMESPACE(Class)	\
-struct kv_meta_stringdata_##Class{ \
-	KvByteArray data[8];				\
-	char stringdata[35];		\
-};	\
-
-#define KV_END_MOC_NAMESPACE()  ;
-
-//static const uint kv_meta_data_##CLASS[8]; \
-
-#define KV_BEGINE_REGISTER_CLASS(Class, Super) \
-	const KvMetaObjectExtraData Class::staticMetaObjectExtraData = { \
-		0, kv_static_metacall	\
-};	\
-	\
-	const KvMetaObject Class::staticMetaObject = { \
-		{ &Super::staticMetaObject, kv_meta_stringdata_##Class, \
-		kv_meta_data_##Class, &staticMetaObjectExtraData } 	\
-	};	\
-	\
-	const KvMetaObject *Class::metaObject() const		\
-	{	\
-		return KvObject::d_ptr->metaObject \
-			? KvObject::d_ptr->metaObject : &staticMetaObject;	\
-	} \
-	\
-	void *Class::kv_metacast(const char *_clname)	\
-	{	\
-		if (!_clname) return 0;	\
-		if (!strcmp(_clname, kv_meta_stringdata_##Class))	\
-			return static_cast<void*>(const_cast<Class*>(this));	\
-		return 0;	\
-	}	
-
-#define KV_END_REGISTER_CLASS() 
-
-
-#define KV_BEGINE_REGISTER_PROPERTY(Class, Super) \
-	int Class::kv_metacall(KvMetaObject::Call _c, int _id, void **_a)	\
-	{	\
-		_id = Super::kv_metacall(_c, _id, _a); \
-		if (_id < 0)\
-			return _id;\
-		if (_c == KvMetaObject::InvokeMetaMethod) {\
-			if (_id < 1)\
-				kv_static_metacall(this, _c, _id, _a);\
-			_id -= 1;\
-		}\
-		else if (_c == KvMetaObject::ReadProperty) {\
-			void *_v = _a[0];\
-			switch (_id) {\
-			case 0: *reinterpret_cast<bool*>(_v) = isEnabled(); break;\
-			}\
-			_id -= 1;\
-		}\
-		else if (_c == KvMetaObject::WriteProperty) {\
-			void *_v = _a[0];\
-			switch (_id) {\
-			case 0: setEnabled(*reinterpret_cast<bool*>(_v)); break;\
-			}\
-			_id -= 1;\
-		}\
-		return _id;\
-	}\
-
-#define KV_END_REGISTER_PROPERTY() 
-
-
-#define KV_REGISTER_PROPERTY(Class, Super) \
-
-
-#define KV_BEGINE_REGISTER_METHOD(Class) \
-	void Class::kv_static_metacall(KvObject *_o, KvMetaObject::Call _c, int _id, void **_a)\
-	{\
-		if (_c == KvMetaObject::InvokeMetaMethod) {\
-			assert(staticMetaObject.cast(_o));\
-			Class *_t = static_cast<Class *>(_o); \
-			switch (_id) {\
-			\
-			default: break;\
-			}\
-		}\
-	}\
-
-#define KV_END_REGISTER_METHOD() 
-
 #define EXPAND(...) __VA_ARGS__
 #define KV_HAS_COMMA_(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,N,...) N
 #define KV_HAS_COMMA(...) EXPAND(KV_HAS_COMMA_(__VA_ARGS__,1,1,1,1,1,1,1,1,1,0))
@@ -169,29 +83,30 @@ struct kv_meta_stringdata_##Class{ \
 #define KV_SIZE_OF_CASE1111 0
 #define KV_IS_EMPTY(...)\
 	EXPAND(KV0_ISEMPTY(\
-		KV_SIZE_OF_CASE, \
-		KV_HAS_COMMA(__VA_ARGS__), \
-		KV_HAS_COMMA(KV0_IS__EQ__ __VA_ARGS__), \
-		KV_HAS_COMMA(__VA_ARGS__()), \
-		KV_HAS_COMMA(KV0_IS__EQ__ __VA_ARGS__())\
+	KV_SIZE_OF_CASE, \
+	KV_HAS_COMMA(__VA_ARGS__), \
+	KV_HAS_COMMA(KV0_IS__EQ__ __VA_ARGS__), \
+	KV_HAS_COMMA(__VA_ARGS__()), \
+	KV_HAS_COMMA(KV0_IS__EQ__ __VA_ARGS__())\
 	))
 #define KV_SIZE_OF_IS_EMPTY_1(...) 0
-#define KV_SIZE_OF_IS_EMPTY_0_(_1,_2,_3,_4,_5,_6,_7,_8,_9,\
-		_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,\
-		_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,\
-		_30,_31,_32,_33,_34,_35,_36,_37,_38,_39,\
-		_40,_41,_42,_43,_44,_45,_46,_47,_48,_49,\
-		_50,_51,_52,_53,_54,_55,_56,_57,_58,_59,\
-		_60,_61,_62,_63,_64,N,...) N
+#define KV_SIZE_OF_IS_EMPTY_0_(\
+	_1, _2, _3, _4, _5, _6, _7, _8, _9, \
+	_10, _11, _12, _13, _14, _15, _16, _17, _18, _19, \
+	_20, _21, _22, _23, _24, _25, _26, _27, _28, _29, \
+	_30, _31, _32, _33, _34, _35, _36, _37, _38, _39, \
+	_40, _41, _42, _43, _44, _45, _46, _47, _48, _49, \
+	_50, _51, _52, _53, _54, _55, _56, _57, _58, _59, \
+	_60, _61, _62, _63, _64, N, ...) N
 #define KV_SIZE_OF_IS_EMPTY_0(...) \
-	EXPAND(KV_SIZE_OF_IS_EMPTY_0_(##__VA_ARGS__,\
-		64,63,62,61,\
-		60,59,58,57,56,55,54,53,52,51,\
-		50,49,48,47,46,45,44,43,42,41,\
-		40,39,38,37,36,35,34,33,32,31,\
-		30,29,28,27,26,25,24,23,22,21,\
-		20,19,18,17,16,15,14,13,12,11,\
-		10, 9, 8, 7, 6, 5, 4, 3, 2, 1))
+	EXPAND(KV_SIZE_OF_IS_EMPTY_0_(##__VA_ARGS__, \
+	64, 63, 62, 61, \
+	60, 59, 58, 57, 56, 55, 54, 53, 52, 51, \
+	50, 49, 48, 47, 46, 45, 44, 43, 42, 41, \
+	40, 39, 38, 37, 36, 35, 34, 33, 32, 31, \
+	30, 29, 28, 27, 26, 25, 24, 23, 22, 21, \
+	20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
+	10, 9, 8, 7, 6, 5, 4, 3, 2, 1))
 #define KV_SIZE_COUNT(...) \
 	KV_SIZE_OF_CONCAT(KV_SIZE_OF_IS_EMPTY_, KV_IS_EMPTY(__VA_ARGS__))(__VA_ARGS__)
 
@@ -221,15 +136,15 @@ struct kv_meta_stringdata_##Class{ \
 #define KV_DEFARG9(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG8(s,f,a,__VA_ARGS__)
 #else
 #define KV_DEFARG0(s,f,a,o)
-#define KV_DEFARG1(s,f,a,v,...) f(EXPAND(P_1(v)) ,a ,a1)
-#define KV_DEFARG2(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s f(EXPAND(P_2(v)) ,a ,a2)
-#define KV_DEFARG3(s,f,a,v,...) KV_DEFARG2(s,f,a,v) s f(EXPAND(P_3(v)) ,a ,a3)
-#define KV_DEFARG4(s,f,a,v,...) KV_DEFARG3(s,f,a,v) s f(EXPAND(P_4(v)) ,a ,a4)
-#define KV_DEFARG5(s,f,a,v,...) KV_DEFARG4(s,f,a,v) s f(EXPAND(P_5(v)) ,a ,a5)
-#define KV_DEFARG6(s,f,a,v,...) KV_DEFARG5(s,f,a,v) s f(EXPAND(P_6(v)) ,a ,a6)
-#define KV_DEFARG7(s,f,a,v,...) KV_DEFARG6(s,f,a,v) s f(EXPAND(P_7(v)) ,a ,a7)
-#define KV_DEFARG8(s,f,a,v,...) KV_DEFARG7(s,f,a,v) s f(EXPAND(P_8(v)) ,a ,a8)
-#define KV_DEFARG9(s,f,a,v,...) KV_DEFARG8(s,f,a,v) s f(EXPAND(P_9(v)) ,a ,a9)
+#define KV_DEFARG1(s,f,a,v,...) f(EXPAND(P_1(v)) ,a ,1)
+#define KV_DEFARG2(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s f(EXPAND(P_2(v)) ,a ,2)
+#define KV_DEFARG3(s,f,a,v,...) KV_DEFARG2(s,f,a,v) s f(EXPAND(P_3(v)) ,a ,3)
+#define KV_DEFARG4(s,f,a,v,...) KV_DEFARG3(s,f,a,v) s f(EXPAND(P_4(v)) ,a ,4)
+#define KV_DEFARG5(s,f,a,v,...) KV_DEFARG4(s,f,a,v) s f(EXPAND(P_5(v)) ,a ,5)
+#define KV_DEFARG6(s,f,a,v,...) KV_DEFARG5(s,f,a,v) s f(EXPAND(P_6(v)) ,a ,6)
+#define KV_DEFARG7(s,f,a,v,...) KV_DEFARG6(s,f,a,v) s f(EXPAND(P_7(v)) ,a ,7)
+#define KV_DEFARG8(s,f,a,v,...) KV_DEFARG7(s,f,a,v) s f(EXPAND(P_8(v)) ,a ,8)
+#define KV_DEFARG9(s,f,a,v,...) KV_DEFARG8(s,f,a,v) s f(EXPAND(P_9(v)) ,a ,9)
 #endif
 
 #define KV_FOREACH_(sepatator,fun,funarg,...) \
@@ -237,24 +152,119 @@ struct kv_meta_stringdata_##Class{ \
 #define KV_FOREACH(sepatator,fun,funarg,...) \
 	KV_FOREACH_(sepatator, fun, funarg, __VA_ARGS__)
 
+#define KV_BEGINE_MOC_NAMESPACE(Class)	\
+struct kv_meta_stringdata_##Class{ \
+	KvByteArray data[8];				\
+	char stringdata[35];		\
+};	\
+
+#define KV_END_MOC_NAMESPACE()  ;
+
+//static const uint kv_meta_data_##CLASS[8]; \
+
+#define KV_BEGINE_REGISTER_CLASS(Class, Super) \
+	typedef Class ThisClass; \
+	typedef Super BaseClass; \
+	const KvMetaObjectExtraData Class::staticMetaObjectExtraData = { \
+		0, kv_static_metacall	\
+	};	\
+	\
+	const KvMetaObject Class::staticMetaObject = { \
+	{ &Super::staticMetaObject, kv_meta_stringdata_##Class, \
+		kv_meta_data_##Class, &staticMetaObjectExtraData } 	\
+	};	\
+	\
+	const KvMetaObject *Class::metaObject() const		\
+	{	\
+		return KvObject::d_ptr->metaObject \
+		? KvObject::d_ptr->metaObject : &staticMetaObject;	\
+	} \
+	\
+	void *Class::kv_metacast(const char *_clname)	\
+	{	\
+		if (!_clname) return 0;	\
+		if (!strcmp(_clname, kv_meta_stringdata_##Class))	\
+			return static_cast<void*>(const_cast<Class*>(this));	\
+		return 0;	\
+	}
+
+#define KV_END_REGISTER_CLASS() 
+
+
+#define KV_BEGINE_REGISTER_PROPERTY() \
+	int ThisClass::kv_metacall(KvMetaObject::Call _c, int _id, void **_a)	\
+{	\
+	_id = BaseClass::kv_metacall(_c, _id, _a); \
+	if (_id < 0)\
+		return _id; \
+	if (_c == KvMetaObject::InvokeMetaMethod) {\
+	if (_id < 1)\
+		kv_static_metacall(this, _c, _id, _a); \
+		_id -= 1; \
+	}\
+	else if (_c == KvMetaObject::ReadProperty) {\
+		void *_v = _a[0]; \
+		switch (_id) {\
+		}\
+		_id -= 1; \
+		}\
+	else if (_c == KvMetaObject::WriteProperty) {\
+		void *_v = _a[0]; \
+		switch (_id) {\
+		}\
+		_id -= 1; \
+	}
+
+#define KV_REGISTER_READ_PROPERTY(INDEX, FUNC,TYPE) \
+			case INDEX: *reinterpret_cast<TYPE*>(_v) = FUNC(); break; \
+
+#define KV_REGISTER_WRITE_PROPERTY(INDEX, FUNC,TYPE) \
+			case INDEX: FUNC(*reinterpret_cast<TYPE*>(_v)); break; \
+
+#define KV_END_REGISTER_PROPERTY() \
+	return _id; \
+}\
+
+
+#define KV_REGISTER_PROPERTY(Class, Super) \
+
 #define kv_comma ,
-#define kv_argment
-#define kv_def_field_(t,v) t v
-#define kv_def_field(t,a,v) kv_def_field_(t,v)
+#define kv_argment a
+#define kv_vargment _a
+#define kv_def_field_(t,a,v) t a##v
+#define kv_def_field(t,a,v) kv_def_field_(t,a, v)
 
-#define kv_def_elem_(v)  const_cast<void*>(reinterpret_cast<const void*>(&v))
-#define kv_def_elem(t,a,v) kv_def_elem_(v)
+#define kv_def_s_elem_(a,v)  const_cast<void*>(reinterpret_cast<const void*>(&a##v))
+#define kv_def_s_elem(t,a,v) kv_def_s_elem_(a,v)
 
-//////////////////////////////////////////////////////////////////////////
-#define KV_REGISTER_SIGNAL(Class,FUNC,...) \
-	void Class::FUNC(KV_FOREACH(kv_comma, kv_def_field, kv_argment, __VA_ARGS__))	\
+#define kv_def_v_elem_(t,a,v)  (*reinterpret_cast<t(*)>(a[v]))
+#define kv_def_v_elem(t,a,v) kv_def_v_elem_(t,a,v)
+
+#define KV_BEGINE_REGISTER_META() \
+	void ThisClass::kv_static_metacall(KvObject *_o, KvMetaObject::Call _c, int _id, void **kv_vargment)\
 	{\
-	int i = KV_SIZE_COUNT(__VA_ARGS__); \
-	void *_a[] = { 0, KV_FOREACH(kv_comma, kv_def_elem, kv_argment, __VA_ARGS__) }; \
-		KvMetaObject::activate(this, &staticMetaObject, 0, _a); \
+		static int idx = 0; \
+		if (_c == KvMetaObject::InvokeMetaMethod) {\
+				assert(staticMetaObject.cast(_o)); \
+				ThisClass *_t = static_cast<ThisClass *>(_o); \
+			switch (_id) {\
+
+#define KV_META_REGISTER_METHOD() 
+
+#define KV_REGISTER_SIGNAL_SLOT(INDEX, FUNC,...) \
+			case INDEX: _t->FUNC(KV_FOREACH(kv_comma, kv_def_v_elem, kv_vargment, __VA_ARGS__)); break;
+	
+#define KV_END_REGISTER_META() \
+			}\
+		}\
 	}\
 
-#define KV_BEGINE_REGISTER_SLOT(Class, Super) \
-
+#define KV_REGISTER_SIGNAL(FUNC,...) \
+	void ThisClass::FUNC(KV_FOREACH(kv_comma, kv_def_field, kv_argment, __VA_ARGS__))	\
+	{\
+		int i = KV_SIZE_COUNT(__VA_ARGS__); \
+		void *kv_vargment[] = { 0, KV_FOREACH(kv_comma, kv_def_s_elem, kv_argment, __VA_ARGS__) }; \
+		KvMetaObject::activate(this, &staticMetaObject, 0, kv_vargment); \
+	}\
 
 #endif // KvObjectdefs_h__
