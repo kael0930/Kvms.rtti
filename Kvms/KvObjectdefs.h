@@ -143,26 +143,57 @@ struct kv_meta_stringdata_##Class{ \
 
 #define KV_END_REGISTER_METHOD() 
 
-
-#define P_ARG(	\
-	_1, _2, _3, _4, _5, _6, _7, _8, _9, \
-	_10, _11, _12, _13, _14, _15, _16, _17, _18, _19, \
-	_20, _21, _22, _23, _24, _25, _26, _27, _28, _29, \
-	_30, _31, _32, _33, _34, _35, _36, _37, _38, _39, \
-	_40, _41, _42, _43, _44, _45, _46, _47, _48, _49, \
-	_50, _51, _52, _53, _54, _55, _56, _57, _58, _59, \
-	_60, _61, _62, _63, _64, N, ...) N
-
-// if _MSC_VER need to add Expand
-#define P_NARG_COUNT(...) \
-	Expand(P_ARG(##__VA_ARGS__, \
-	64, 63, 62, 61, 60, \
-	59, 58, 57, 56, 55, 54, 53, 52, 51, 50, \
-	49, 48, 47, 46, 45, 44, 43, 42, 41, 40, \
-	39, 38, 37, 36, 35, 34, 33, 32, 31, 30, \
-	29, 28, 27, 26, 25, 24, 23, 22, 21, 20, \
-	19, 18, 17, 16, 15, 14, 13, 12, 11, 10, \
-	9, 8, 7, 6, 5, 4, 3, 2, 1))\
+#define EXPAND(...) __VA_ARGS__
+#define KV_HAS_COMMA_(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,N,...) N
+#define KV_HAS_COMMA(...) EXPAND(KV_HAS_COMMA_(__VA_ARGS__,1,1,1,1,1,1,1,1,1,0))
+#define KV0_ISEMPTY_(_1,_2,_3,_4,_5) _1 ## _2 ## _3 ## _4 ## _5
+#define KV0_ISEMPTY(_1,_2,_3,_4,_5) KV0_ISEMPTY_(_1,_2,_3,_4,_5)
+#define KV_SIZE_OF_CONCAT_(_1,_2) _1 ## _2
+#define KV_SIZE_OF_CONCAT(_1,_2) KV_SIZE_OF_CONCAT_(_1,_2)
+#define KV0_IS__EQ__(...) ,
+#define KV_SIZE_OF_CASE0000 0
+#define KV_SIZE_OF_CASE0001 1
+#define KV_SIZE_OF_CASE0010 0
+#define KV_SIZE_OF_CASE0011 0
+#define KV_SIZE_OF_CASE0100 0
+#define KV_SIZE_OF_CASE0101 0
+#define KV_SIZE_OF_CASE0110 0
+#define KV_SIZE_OF_CASE0111 0
+#define KV_SIZE_OF_CASE1000 0
+#define KV_SIZE_OF_CASE1001 0
+#define KV_SIZE_OF_CASE1010 0
+#define KV_SIZE_OF_CASE1011 0
+#define KV_SIZE_OF_CASE1100 0
+#define KV_SIZE_OF_CASE1101 0
+#define KV_SIZE_OF_CASE1110 0
+#define KV_SIZE_OF_CASE1111 0
+#define KV_IS_EMPTY(...)\
+	EXPAND(KV0_ISEMPTY(\
+		KV_SIZE_OF_CASE, \
+		KV_HAS_COMMA(__VA_ARGS__), \
+		KV_HAS_COMMA(KV0_IS__EQ__ __VA_ARGS__), \
+		KV_HAS_COMMA(__VA_ARGS__()), \
+		KV_HAS_COMMA(KV0_IS__EQ__ __VA_ARGS__())\
+	))
+#define KV_SIZE_OF_IS_EMPTY_1(...) 0
+#define KV_SIZE_OF_IS_EMPTY_0_(_1,_2,_3,_4,_5,_6,_7,_8,_9,\
+		_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,\
+		_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,\
+		_30,_31,_32,_33,_34,_35,_36,_37,_38,_39,\
+		_40,_41,_42,_43,_44,_45,_46,_47,_48,_49,\
+		_50,_51,_52,_53,_54,_55,_56,_57,_58,_59,\
+		_60,_61,_62,_63,_64,N,...) N
+#define KV_SIZE_OF_IS_EMPTY_0(...) \
+	EXPAND(KV_SIZE_OF_IS_EMPTY_0_(##__VA_ARGS__,\
+		64,63,62,61,\
+		60,59,58,57,56,55,54,53,52,51,\
+		50,49,48,47,46,45,44,43,42,41,\
+		40,39,38,37,36,35,34,33,32,31,\
+		30,29,28,27,26,25,24,23,22,21,\
+		20,19,18,17,16,15,14,13,12,11,\
+		10, 9, 8, 7, 6, 5, 4, 3, 2, 1))
+#define KV_SIZE_COUNT(...) \
+	KV_SIZE_OF_CONCAT(KV_SIZE_OF_IS_EMPTY_, KV_IS_EMPTY(__VA_ARGS__))(__VA_ARGS__)
 
 #define P_1(_1, ...) _1
 #define P_2(_1, _2, ...) _2
@@ -174,52 +205,52 @@ struct kv_meta_stringdata_##Class{ \
 #define P_8(_1, _2, _3, _4, _5, _6, _7, _8, ...) _8
 #define P_9(_1, _2, _3, _4, _5, _6, _7, _8, _9, ...) _9 
 
-#define Expand(...) __VA_ARGS__
 #define KV_CONCAT_(l, r) l ## r
 #define KV_CONCAT(l, r) KV_CONCAT_(l, r)
 
 #if !defined(_MSC_VER)
-#define KV_DOARG0(s,f,a,o)
-#define KV_DOARG1(s,f,a,v,...) f(a,v) 
-#define KV_DOARG2(s,f,a,v,...) Expand(KV_DOARG1(s,f,a,v)) s KV_DOARG1(s,f,a,__VA_ARGS__)
-#define KV_DOARG3(s,f,a,v,...) Expand(KV_DOARG1(s,f,a,v)) s KV_DOARG2(s,f,a,__VA_ARGS__)
-#define KV_DOARG4(s,f,a,v,...) KV_DOARG1(s,f,a,v) s KV_DOARG3(s,f,a,__VA_ARGS__)
-#define KV_DOARG5(s,f,a,v,...) KV_DOARG1(s,f,a,v) s KV_DOARG4(s,f,a,__VA_ARGS__)
-#define KV_DOARG6(s,f,a,v,...) KV_DOARG1(s,f,a,v) s KV_DOARG5(s,f,a,__VA_ARGS__)
-#define KV_DOARG7(s,f,a,v,...) KV_DOARG1(s,f,a,v) s KV_DOARG6(s,f,a,__VA_ARGS__)
-#define KV_DOARG8(s,f,a,v,...) KV_DOARG1(s,f,a,v) s KV_DOARG7(s,f,a,__VA_ARGS__)
-#define KV_DOARG9(s,f,a,v,...) KV_DOARG1(s,f,a,v) s KV_DOARG8(s,f,a,__VA_ARGS__)
+#define KV_DEFARG0(s,f,a,o)
+#define KV_DEFARG1(s,f,a,v,...) f(a,v) 
+#define KV_DEFARG2(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG1(s,f,a,__VA_ARGS__)
+#define KV_DEFARG3(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG2(s,f,a,__VA_ARGS__)
+#define KV_DEFARG4(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG3(s,f,a,__VA_ARGS__)
+#define KV_DEFARG5(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG4(s,f,a,__VA_ARGS__)
+#define KV_DEFARG6(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG5(s,f,a,__VA_ARGS__)
+#define KV_DEFARG7(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG6(s,f,a,__VA_ARGS__)
+#define KV_DEFARG8(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG7(s,f,a,__VA_ARGS__)
+#define KV_DEFARG9(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s KV_DEFARG8(s,f,a,__VA_ARGS__)
 #else
-#define KV_DOARG0(s,f,a,o)
-#define KV_DOARG1(s,f,a,v,...) f(Expand(P_1(v)) ,a ,a1)
-#define KV_DOARG2(s,f,a,v,...) KV_DOARG1(s,f,a,v) s f(Expand(P_2(v)) ,a ,a2)
-#define KV_DOARG3(s,f,a,v,...) KV_DOARG2(s,f,a,v) s f(Expand(P_3(v)) ,a ,a3)
-#define KV_DOARG4(s,f,a,v,...) KV_DOARG3(s,f,a,v) s f(Expand(P_4(v)) ,a ,a4)
-#define KV_DOARG5(s,f,a,v,...) KV_DOARG4(s,f,a,v) s f(Expand(P_5(v)) ,a ,a5)
-#define KV_DOARG6(s,f,a,v,...) KV_DOARG5(s,f,a,v) s f(Expand(P_6(v)) ,a ,a6)
-#define KV_DOARG7(s,f,a,v,...) KV_DOARG6(s,f,a,v) s f(Expand(P_7(v)) ,a ,a7)
-#define KV_DOARG8(s,f,a,v,...) KV_DOARG7(s,f,a,v) s f(Expand(P_8(v)) ,a ,a8)
-#define KV_DOARG9(s,f,a,v,...) KV_DOARG8(s,f,a,v) s f(Expand(P_9(v)) ,a ,a9)
+#define KV_DEFARG0(s,f,a,o)
+#define KV_DEFARG1(s,f,a,v,...) f(EXPAND(P_1(v)) ,a ,a1)
+#define KV_DEFARG2(s,f,a,v,...) KV_DEFARG1(s,f,a,v) s f(EXPAND(P_2(v)) ,a ,a2)
+#define KV_DEFARG3(s,f,a,v,...) KV_DEFARG2(s,f,a,v) s f(EXPAND(P_3(v)) ,a ,a3)
+#define KV_DEFARG4(s,f,a,v,...) KV_DEFARG3(s,f,a,v) s f(EXPAND(P_4(v)) ,a ,a4)
+#define KV_DEFARG5(s,f,a,v,...) KV_DEFARG4(s,f,a,v) s f(EXPAND(P_5(v)) ,a ,a5)
+#define KV_DEFARG6(s,f,a,v,...) KV_DEFARG5(s,f,a,v) s f(EXPAND(P_6(v)) ,a ,a6)
+#define KV_DEFARG7(s,f,a,v,...) KV_DEFARG6(s,f,a,v) s f(EXPAND(P_7(v)) ,a ,a7)
+#define KV_DEFARG8(s,f,a,v,...) KV_DEFARG7(s,f,a,v) s f(EXPAND(P_8(v)) ,a ,a8)
+#define KV_DEFARG9(s,f,a,v,...) KV_DEFARG8(s,f,a,v) s f(EXPAND(P_9(v)) ,a ,a9)
 #endif
 
 #define KV_FOREACH_(sepatator,fun,funarg,...) \
-	KV_CONCAT(KV_DOARG, P_NARG_COUNT(__VA_ARGS__))(sepatator, fun, funarg, __VA_ARGS__)
+	KV_CONCAT(KV_DEFARG, KV_SIZE_COUNT(__VA_ARGS__))(sepatator, fun, funarg, __VA_ARGS__)
 #define KV_FOREACH(sepatator,fun,funarg,...) \
 	KV_FOREACH_(sepatator, fun, funarg, __VA_ARGS__)
 
 #define kv_comma ,
 #define kv_argment
-#define kv_enum_field(t,v) t v
-#define kv_def_field1(t,a,v) kv_enum_field(t,v)
+#define kv_def_field_(t,v) t v
+#define kv_def_field(t,a,v) kv_def_field_(t,v)
 
-#define kv_enum_elem(v)  const_cast<void*>(reinterpret_cast<const void*>(&v))
-#define kv_def_field2(t,a,v) kv_enum_elem(v)
+#define kv_def_elem_(v)  const_cast<void*>(reinterpret_cast<const void*>(&v))
+#define kv_def_elem(t,a,v) kv_def_elem_(v)
 
 //////////////////////////////////////////////////////////////////////////
 #define KV_REGISTER_SIGNAL(Class,FUNC,...) \
-	void Class::FUNC(KV_FOREACH(kv_comma, kv_def_field1, kv_argment, __VA_ARGS__))	\
+	void Class::FUNC(KV_FOREACH(kv_comma, kv_def_field, kv_argment, __VA_ARGS__))	\
 	{\
-	void *_a[] = { 0, KV_FOREACH(kv_comma, kv_def_field2, kv_argment, __VA_ARGS__) }; \
+	int i = KV_SIZE_COUNT(__VA_ARGS__); \
+	void *_a[] = { 0, KV_FOREACH(kv_comma, kv_def_elem, kv_argment, __VA_ARGS__) }; \
 		KvMetaObject::activate(this, &staticMetaObject, 0, _a); \
 	}\
 
