@@ -21,9 +21,6 @@
     <ClCompile Include="rtti-property.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test-sylixos.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="rtti-string.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

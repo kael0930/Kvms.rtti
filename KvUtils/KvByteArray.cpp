@@ -2,10 +2,10 @@
 
 #define IS_RAW_DATA(d) ((d)->data != (d)->array)
 
-int qAllocMore(int alloc, int extra)
+int AllocMore(int alloc, int extra)
 {
 	assert(alloc >= 0 && extra >= 0);
-	assert(alloc < (1 << 30) - extra && "qAllocMore Requested size is too large!");
+	assert(alloc < (1 << 30) - extra && "AllocMore Requested size is too large!");
 
 	if (alloc == 0 && extra == 0)
 		return 0;
@@ -131,7 +131,7 @@ void KvByteArray::resize(int size)
 			|| size > d->alloc
 			|| (size < d->size && size < d->alloc >> 1))
 		{
-			realloc(qAllocMore(size, sizeof(Data)));
+			realloc(AllocMore(size, sizeof(Data)));
 		}
 		if (d->alloc >= size) 
 		{
@@ -230,7 +230,7 @@ KvByteArray& KvByteArray::operator=(const KvByteArray &other)
 KvByteArray& KvByteArray::append(char ch)
 {
 	if (d->ref != 1 || d->size + 1 > d->alloc)
-		realloc(qAllocMore(d->size + 1, sizeof(Data)));
+		realloc(AllocMore(d->size + 1, sizeof(Data)));
 	d->data[d->size++] = ch;
 	d->data[d->size] = '\0';
 	return *this;
@@ -241,7 +241,7 @@ KvByteArray& KvByteArray::append(const char *str)
 	if (str) {
 		int len = kstrlen(str);
 		if (d->ref != 1 || d->size + len > d->alloc)
-			realloc(qAllocMore(d->size + len, sizeof(Data)));
+			realloc(AllocMore(d->size + len, sizeof(Data)));
 		memcpy(d->data + d->size, str, len + 1); // include null terminator
 		d->size += len;
 	}
@@ -255,7 +255,7 @@ KvByteArray &KvByteArray::append(const char *str, int len)
 		len = kstrlen(str);
 	if (str && len) {
 		if (d->ref != 1 || d->size + len > d->alloc)
-			realloc(qAllocMore(d->size + len, sizeof(Data)));
+			realloc(AllocMore(d->size + len, sizeof(Data)));
 		memcpy(d->data + d->size, str, len); // include null terminator
 		d->size += len;
 		d->data[d->size] = '\0';
@@ -270,7 +270,7 @@ KvByteArray &KvByteArray::append(const KvByteArray &ba)
 	}
 	else if (ba.d != &shared_null) {
 		if (d->ref != 1 || d->size + ba.d->size > d->alloc)
-			realloc(qAllocMore(d->size + ba.d->size, sizeof(Data)));
+			realloc(AllocMore(d->size + ba.d->size, sizeof(Data)));
 		memcpy(d->data + d->size, ba.d->data, ba.d->size);
 		d->size += ba.d->size;
 		d->data[d->size] = '\0';

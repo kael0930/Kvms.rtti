@@ -66,4 +66,8 @@
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="p99\ChangeLog" />
+    <None Include="p99\LICENSE" />
+  </ItemGroup>
 </Project>

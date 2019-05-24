@@ -8,7 +8,7 @@ TEST(SignalSlotTest, Connect)
 {
 	sl = new SignalSlotTest();
 
-	//signature nedd remove whitespace SignalSlotTest * space 
+	//signature need remove whitespace SignalSlotTest * space 
 	bool ret = KvObject::connect(sl, SIGNAL(enabledStateChanged(SignalSlotTest*)), sl, SLOT(deleteLater()));
 	ret = true;
 }
