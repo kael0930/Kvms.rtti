@@ -167,9 +167,9 @@ static bool check_signal_macro(const KvObject *sender, const char *signal,
 	const char *func, const char *op)
 {
 	int sigcode = extract_code(signal);
-	if (sigcode != QSIGNAL_CODE)
+	if (sigcode != KSIGNAL_CODE)
 	{
-		if (sigcode == QSLOT_CODE)
+		if (sigcode == KSLOT_CODE)
 			printf("Object::%s: Attempt to %s non-signal %s::%s",
 			func, op, sender->metaObject()->className(), signal + 1);
 		else
@@ -183,7 +183,7 @@ static bool check_signal_macro(const KvObject *sender, const char *signal,
 static bool check_method_code(int code, const KvObject *object,
 	const char *method, const char *func)
 {
-	if (code != QSLOT_CODE && code != QSIGNAL_CODE) {
+	if (code != KSLOT_CODE && code != KSIGNAL_CODE) {
 		printf("Object::%s: Use the SLOT or SIGNAL macro to "
 			"%s %s::%s", func, func, object->metaObject()->className(), method);
 		return false;
@@ -196,8 +196,8 @@ static void err_method_notfound(const KvObject *object,
 {
 	const char *type = "method";
 	switch (extract_code(method)) {
-	case QSLOT_CODE:   type = "slot";   break;
-	case QSIGNAL_CODE: type = "signal"; break;
+	case KSLOT_CODE:   type = "slot";   break;
+	case KSIGNAL_CODE: type = "signal"; break;
 	}
 	const char *loc = extract_location(method);
 	if (strchr(method, ')') == 0)                // common typing mistake
@@ -289,10 +289,10 @@ bool KvObject::connect(const KvObject * sender, const char *signal,
 	const KvMetaObject *rmeta = receiver->metaObject();
 	int method_index_relative = -1;
 	switch (membcode) {
-	case QSLOT_CODE:
+	case KSLOT_CODE:
 		method_index_relative = KvMetaObjectPrivate::indexOfSlotRelative(&rmeta, method, false);
 		break;
-	case QSIGNAL_CODE:
+	case KSIGNAL_CODE:
 		method_index_relative = KvMetaObjectPrivate::indexOfSignalRelative(&rmeta, method, false);
 		break;
 	}
@@ -305,12 +305,12 @@ bool KvObject::connect(const KvObject * sender, const char *signal,
 		// rmeta may have been modified above
 		rmeta = receiver->metaObject();
 		switch (membcode) {
-		case QSLOT_CODE:
+		case KSLOT_CODE:
 			method_index_relative = KvMetaObjectPrivate::indexOfSlotRelative(&rmeta, method, false);
 			if (method_index_relative < 0)
 				method_index_relative = KvMetaObjectPrivate::indexOfSlotRelative(&rmeta, method, true);
 			break;
-		case QSIGNAL_CODE:
+		case KSIGNAL_CODE:
 			method_index_relative = KvMetaObjectPrivate::indexOfSignalRelative(&rmeta, method, false);
 			if (method_index_relative < 0)
 				method_index_relative = KvMetaObjectPrivate::indexOfSignalRelative(&rmeta, method, true);

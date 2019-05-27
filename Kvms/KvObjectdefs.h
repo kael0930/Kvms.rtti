@@ -15,11 +15,13 @@
 #include <boost/preprocessor/repetition.hpp>
 #include <boost/preprocessor/punctuation.hpp>
 #include <boost/preprocessor/arithmetic.hpp>
+#include <boost/preprocessor/comparison.hpp>
 
 #define K_OBJECT_CHECK
 
 #ifdef K_NO_DATA_RELOCATION
-#define K_OBJECT_GETSTATICMETAOBJECT static const KvMetaObject &getStaticMetaObject();
+#define K_OBJECT_GETSTATICMETAOBJECT \
+	static const KvMetaObject &getStaticMetaObject();
 #else
 #define K_OBJECT_GETSTATICMETAOBJECT
 #endif
@@ -49,26 +51,26 @@ private: \
 
 KV_CORE_EXPORT const char *kvFlagLocation(const char *method);
 
-#define QTOSTRING_HELPER(s) #s
-#define QTOSTRING(s) QTOSTRING_HELPER(s)
-#ifndef QT_NO_DEBUG
-# define QLOCATION "\0" __FILE__ ":" QTOSTRING(__LINE__)
-# ifndef QT_NO_KEYWORDS
-#  define METHOD(a)   kvFlagLocation("0"#a QLOCATION)
+#define KVOSTRING_HELPER(s) #s
+#define KVOSTRING(s) KVOSTRING_HELPER(s)
+#ifndef KV_NO_DEBUG
+# define KLOCATION "\0" __FILE__ ":" KVOSTRING(__LINE__)
+# ifndef KV_NO_KEYWORDS
+#  define METHOD(a)   kvFlagLocation("0"#a KLOCATION)
 # endif
-# define SLOT(a)     kvFlagLocation("1"#a QLOCATION)
-# define SIGNAL(a)   kvFlagLocation("2"#a QLOCATION)
+# define SLOT(a)     kvFlagLocation("1"#a KLOCATION)
+# define SIGNAL(a)   kvFlagLocation("2"#a KLOCATION)
 #else
-# ifndef QT_NO_KEYWORDS
+# ifndef KV_NO_KEYWORDS
 #  define METHOD(a)   "0"#a
 # endif
 # define SLOT(a)     "1"#a
 # define SIGNAL(a)   "2"#a
 #endif
 
-#define QMETHOD_CODE  0                        // member type codes
-#define QSLOT_CODE    1
-#define QSIGNAL_CODE  2
+#define KMETHOD_CODE  0                        // member type codes
+#define KSLOT_CODE    1
+#define KSIGNAL_CODE  2
 
 
 #define KV_BEGINE_MOC_NAMESPACE(Class)	\
@@ -81,7 +83,7 @@ struct kv_meta_stringdata_##Class{ \
 
 //static const uint kv_meta_data_##CLASS[8]; \
 
-#define KV_BEGINE_REGISTER_CLASS(Class, Super) \
+#define KV_BEGINE_REGISTER_CLASS(Class, Super,...) \
 	typedef Class ThisClass; \
 	typedef Super BaseClass; \
 	const KvMetaObjectExtraData Class::staticMetaObjectExtraData = { \
@@ -106,11 +108,11 @@ struct kv_meta_stringdata_##Class{ \
 			return static_cast<void*>(const_cast<Class*>(this));	\
 		return 0;	\
 	}\
+	\
 	KV_BEGINE_REGISTER_PROPERTY()\
-	KV_BEGINE_REGISTER_META()\
+	KV_BEGINE_REGISTER_META(__VA_ARGS__)\
 
-#define KV_END_REGISTER_CLASS()	\
-
+#define KV_END_REGISTER_CLASS()
 
 
 #define KV_BEGINE_REGISTER_PROPERTY() \
@@ -155,84 +157,130 @@ struct kv_meta_stringdata_##Class{ \
 #define kv_argment a
 #define kv_vargment _a
 
-#define kv_def_field_(t,a,v) t a##v
+//method
+#define kv_def_field_(t,a,v)  (*reinterpret_cast<t(*)>(a[v]))
 #define kv_def_elem_0(t,a,v) kv_def_field_(t,a,v)
 
+//slot
+#define kv_def_v_elem_(a,v)  const_cast<void*>(reinterpret_cast<const void*>(&a##v))
+#define kv_def_elem_1(t,a,v) kv_def_v_elem_(a,v)
+
+//signal
+#define kv_def_f_elem_(t,a,v) t a##v
+#define kv_def_elem_2(t,a,v) kv_def_f_elem_(t,a,v)
+
+//signal param
 #define kv_def_s_elem_(a,v)  const_cast<void*>(reinterpret_cast<const void*>(&a##v))
-#define kv_def_elem_1(t,a,v) kv_def_s_elem_(a,v)
+#define kv_def_elem_3(t,a,v) kv_def_s_elem_(a,v)
 
-#define kv_def_v_elem_(t,a,v)  (*reinterpret_cast<t(*)>(a[v]))
-#define kv_def_elem_2(t,a,v) kv_def_v_elem_(t,a,v)
+#define kv_signal_fun_elem_0(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_EQUAL(1, index), BOOST_PP_EMPTY(), BOOST_PP_COMMA())\
+	kv_def_elem_0(element, data, index)\
 
-#define kv_signal_fun_elem_0(r, funarg, index, element) \
-	BOOST_PP_IF(BOOST_PP_EQUAL(0,index), BOOST_PP_EMPTY,BOOST_PP_COMMA)()\
-	kv_def_elem_0(element, funarg,BOOST_PP_ADD(index,1))\
+#define kv_signal_fun_elem_1(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_EQUAL(1,index), BOOST_PP_EMPTY,BOOST_PP_COMMA)()\
+	kv_def_elem_1(element, data, index)
 
-#define kv_signal_fun_elem_1(r, funarg, index, element) \
-	BOOST_PP_IF(BOOST_PP_EQUAL(0,index), BOOST_PP_EMPTY,BOOST_PP_COMMA)()\
-	kv_def_elem_1(element, funarg, BOOST_PP_ADD(index,1))
+#define kv_signal_fun_elem_2(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_EQUAL(1,index), BOOST_PP_EMPTY,BOOST_PP_COMMA)()\
+	kv_def_elem_2(element, data, index)
 
-#define kv_signal_fun_elem_2(r, funarg, index, element) \
-	BOOST_PP_IF(BOOST_PP_EQUAL(0,index), BOOST_PP_EMPTY,BOOST_PP_COMMA)()\
-	kv_def_elem_2(element, funarg, BOOST_PP_ADD(index,1))
+#define kv_metacall_elem_(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(2, index)\
+	, kv_signal_fun_elem_0(r, data, BOOST_PP_SUB(index, 1), element)\
+	, BOOST_PP_EMPTY())
 
-#define Kv_FOR_EACH_ELEM(method,...)\
-	BOOST_PP_SEQ_FOR_EACH_I(BOOST_PP_CAT(kv_signal_fun_elem_, method)\
-	,kv_vargment,BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) 
+#define kv_static_metacall_elem(r, data, index, element) \
+		case index: data->BOOST_PP_TUPLE_ELEM(1, element)\
+		(\
+			BOOST_PP_SEQ_FOR_EACH_I(\
+			BOOST_PP_CAT(kv_signal_fun_elem_, BOOST_PP_TUPLE_ELEM(0, element))\
+			, kv_vargment, BOOST_PP_TUPLE_TO_SEQ(element))\
+		); break; \
 
-# define KV_META_METHOD_SEQ \
-	(1)(2)(3)(4)(5)(6)(7)(8)(9) \
-	(10)(11)(12)(13)(14)(15)(16)(17)(18)(19) \
-	(20)(21)(22)(23)(24)(25)(26)(27)(28)(29) \
-	(30)(31)(32)(33)(34)(35)(36)(37)(38)(39) \
-	(40)(41)(42)(43)(44)(45)(46)(47)(48)(49) \
-	(50)(51)(52)(53)(54)(55)(56)(57)(58)(59) \
-	(60)(61)(62)(63)(64)(65)(66)(67)(68)(69) \
-	(70)(71)(72)(73)(74)(75)(76)(77)(78)(79) \
-	(80)(81)(82)(83)(84)(85)(86)(87)(88)(89) \
-	(90)(91)(92)(93)(94)(95)(96)(97)(98)(99) \
-	(100)
+#define KV_PP_SEQ_FOR_EACH_R_ID() BOOST_PP_SEQ_FOR_EACH_I 
+#define KV_PP_DEFER(x) x BOOST_PP_EMPTY()
+#define kv_static_metacall_elem0(r, data, index, element) \
+		case index: data->BOOST_PP_TUPLE_ELEM(1, element)\
+		(\
+			KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_metacall_elem_, kv_vargment\
+			, BOOST_PP_TUPLE_TO_SEQ(element))\
+		); break; \
 
-#define MACRO(r, data, elem) BOOST_PP_CAT(elem, data)
+#define kv_signal_fun_elem_ex(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(2, index)\
+	, kv_def_elem_2(element, data, BOOST_PP_SUB(index, 1))\
+	, BOOST_PP_EMPTY())
 
-#define KV_BEGINE_REGISTER_META() \
+#define kv_signal_fun_elem_ex2(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(2, index)\
+	, kv_def_elem_3(element, data, BOOST_PP_SUB(index, 1))\
+	, BOOST_PP_EMPTY())
+
+#define kv_signal_metacall(index,...)\
+	void ThisClass::BOOST_PP_TUPLE_ELEM(1, __VA_ARGS__)(\
+	KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_signal_fun_elem_ex, kv_vargment\
+	, BOOST_PP_TUPLE_TO_SEQ(__VA_ARGS__)))\
+	{\
+		void *kv_vargment[] = { 0, \
+		KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_signal_fun_elem_ex2, kv_vargment\
+		, BOOST_PP_TUPLE_TO_SEQ(__VA_ARGS__))\
+		}; \
+		KvMetaObject::activate(this, &staticMetaObject, index, kv_vargment); \
+	}\
+
+#define kv_signal_metacall_elem(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_EQUAL(2, BOOST_PP_TUPLE_ELEM(0, element)), \
+	kv_signal_metacall, BOOST_PP_EMPTY)(index,element)
+
+#define KV_BEGINE_REGISTER_META(...) \
 	void ThisClass::kv_static_metacall(KvObject *_o, KvMetaObject::Call _c,\
 										int _id, void **kv_vargment)\
 	{\
 		if (_c == KvMetaObject::InvokeMetaMethod) {\
-				assert(staticMetaObject.cast(_o)); \
-				ThisClass *_t = static_cast<ThisClass *>(_o); \
+			assert(staticMetaObject.cast(_o)); \
+			ThisClass *_t = static_cast<ThisClass *>(_o); \
 			switch (_id) {\
-			\
-			BOOST_PP_SEQ_FOR_EACH(MACRO,__X__,KV_META_METHOD_SEQ)\
+			BOOST_PP_SEQ_FOR_EACH_I(kv_static_metacall_elem0, _t\
+				, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))\
 			}\
 		}\
 	}\
+	\
+	BOOST_PP_SEQ_FOR_EACH_I(kv_signal_metacall_elem, _t\
+	, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))\
 
-#define KV_META_REGISTER_METHOD(Function,...) \
-	BOOST_PP_SEQ_INSERT(KV_META_METHOD_SEQ,2,(Function(\
-			BOOST_PP_IF(BOOST_PP_IS_EMPTY(__VA_ARGS__)\
-			,BOOST_PP_EMPTY\
-			,Kv_FOR_EACH_ELEM)(2,__VA_ARGS__)))\
-	)\
+#define KV_META_REGISTER(Method,Function,...)\
+	(Method, Function, __VA_ARGS__)\
 
-#define KV_REGISTER_SIGNAL_SLOT(Function,...) \
-		KV_META_REGISTER_METHOD(Function,__VA_ARGS__)
+#define KV_REGISTER_METHOD(Function,...) \
+	KV_META_REGISTER(KMETHOD_CODE, Function, __VA_ARGS__)
+
+#define KV_REGISTER_SLOT(Function,...) \
+	KV_META_REGISTER(KSLOT_CODE, Function, __VA_ARGS__)
+
+#define KV_REGISTER_SIGNAL(Function,...) \
+	KV_META_REGISTER(KSIGNAL_CODE, Function, __VA_ARGS__)\
+
+//#define Kv_FOR_EACH_ELEM(method,...)\
+//	BOOST_PP_SEQ_FOR_EACH_I(BOOST_PP_CAT(kv_signal_fun_elem_, method)\
+//	, kv_vargment, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
+//
+//#define KV_REGISTER_SIGNAL_0(Function,...)\
+//	void ThisClass::Function(\
+//			BOOST_PP_IF(BOOST_PP_IS_EMPTY(__VA_ARGS__)\
+//			,BOOST_PP_EMPTY\
+//			, Kv_FOR_EACH_ELEM)(KSIGNAL_CODE, __VA_ARGS__))\
+//	{\
+//		void *kv_vargment[] = { 0,\
+//			BOOST_PP_IF(BOOST_PP_IS_EMPTY(__VA_ARGS__)\
+//				,BOOST_PP_EMPTY\
+//				,Kv_FOR_EACH_ELEM)(3,__VA_ARGS__)\
+//		 };\
+//		KvMetaObject::activate(this, &staticMetaObject, 0, kv_vargment);\
+//	}\
+//
 
 #define KV_END_REGISTER_META()
-
-#define KV_REGISTER_SIGNAL(Function,...)\
-	void ThisClass::Function(\
-			BOOST_PP_IF(BOOST_PP_IS_EMPTY(__VA_ARGS__)\
-			,BOOST_PP_EMPTY\
-			,Kv_FOR_EACH_ELEM)(0,__VA_ARGS__))\
-	{\
-		void *kv_vargment[] = { 0,\
-			BOOST_PP_IF(BOOST_PP_IS_EMPTY(__VA_ARGS__)\
-				,BOOST_PP_EMPTY\
-				,Kv_FOR_EACH_ELEM)(1,__VA_ARGS__)\
-		 };\
-		KvMetaObject::activate(this, &staticMetaObject, 0, kv_vargment);\
-	}\
 
 #endif // KvObjectdefs_h__

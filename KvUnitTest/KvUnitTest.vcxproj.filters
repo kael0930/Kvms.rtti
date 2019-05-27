@@ -30,9 +30,6 @@
     <ClCompile Include="rtti-signal-slot.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="boost-preprocessor.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SignalSlotTest.h">
