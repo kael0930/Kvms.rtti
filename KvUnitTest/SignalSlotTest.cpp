@@ -34,19 +34,26 @@ static const char kv_meta_stringdata_SignalSlotTest[] = {
 };
 
 KV_BEGINE_REGISTER_CLASS(SignalSlotTest, KvObject)
-KV_BEGINE_REGISTER_PROPERTY()
+///KV_BEGINE_REGISTER_PROPERTY()
+
 //KV_REGISTER_READ_PROPERTY(0, isEnabled, bool)
 //KV_REGISTER_READ_PROPERTY(0, setEnabled, bool)
-KV_END_REGISTER_PROPERTY()
 
-KV_BEGINE_REGISTER_META()
-	KV_REGISTER_SIGNAL_SLOT(0, enabledStateChanged, SignalSlotTest*)
-	KV_REGISTER_SIGNAL_SLOT(1, SayHello)
-	KV_REGISTER_SIGNAL_SLOT(2, CallOneParam, int)
-	KV_REGISTER_SIGNAL_SLOT(3, CallTwoParam, int, bool)
-KV_END_REGISTER_META()
+///KV_END_REGISTER_PROPERTY()
 
-KV_REGISTER_SIGNAL(enabledStateChanged, SignalSlotTest*)
+///KV_BEGINE_REGISTER_META()
+
+//KV_REGISTER_SIGNAL_SLOT(0, enabledStateChanged, SignalSlotTest*)
+//KV_REGISTER_SIGNAL_SLOT(1, SayHello)
+//KV_REGISTER_SIGNAL_SLOT(2, CallOneParam, int)
+//KV_REGISTER_SIGNAL_SLOT(3, CallTwoParam, int, bool)
+
+KV_META_REGISTER_METHOD(CallTwoParam, int, bool)
+KV_META_REGISTER_METHOD(Hah, bool)
+
+///KV_END_REGISTER_META()
+
+KV_REGISTER_SIGNAL(enabledStateChanged, SignalSlotTest *)
 KV_END_REGISTER_CLASS()
 
 
