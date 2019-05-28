@@ -71,21 +71,13 @@ KV_CORE_EXPORT const char *kvFlagLocation(const char *method);
 #define KMETHOD_CODE  0                        // member type codes
 #define KSLOT_CODE    1
 #define KSIGNAL_CODE  2
+#define KPROPERTY_CODE  3
+#define KCLASSINFO_CODE  4
 
-
-#define KV_BEGINE_MOC_NAMESPACE(Class)	\
-struct kv_meta_stringdata_##Class{ \
-	KvByteArray data[8];				\
-	char stringdata[35];		\
-};	\
-
-#define KV_END_MOC_NAMESPACE()  ;
-
-//static const uint kv_meta_data_##CLASS[8]; \
 
 #define KV_BEGINE_REGISTER_CLASS(Class, Super,...) \
-	typedef Class ThisClass; \
-	typedef Super BaseClass; \
+	typedef Class ThisClass;\
+	typedef Super BaseClass;\
 	const KvMetaObjectExtraData Class::staticMetaObjectExtraData = { \
 		0, kv_static_metacall	\
 	};	\
@@ -109,53 +101,17 @@ struct kv_meta_stringdata_##Class{ \
 		return 0;	\
 	}\
 	\
-	KV_BEGINE_REGISTER_PROPERTY()\
 	KV_BEGINE_REGISTER_META(__VA_ARGS__)\
+	KV_BEGINE_REGISTER_PROPERTY(__VA_ARGS__)\
+	KV_COMPUTE_META_DATA(Class, Super, __VA_ARGS__)\
+	KV_COMPUTE_STRING_DATA(Class, Super, __VA_ARGS__)\
 
 #define KV_END_REGISTER_CLASS()
 
-
-#define KV_BEGINE_REGISTER_PROPERTY() \
-	int ThisClass::kv_metacall(KvMetaObject::Call _c, int _id, void **_a)	\
-	{	\
-		_id = BaseClass::kv_metacall(_c, _id, _a); \
-		if (_id < 0)\
-			return _id; \
-		if (_c == KvMetaObject::InvokeMetaMethod) {\
-		if (_id < 1)\
-			kv_static_metacall(this, _c, _id, _a); \
-			_id -= 1; \
-		}\
-		else if (_c == KvMetaObject::ReadProperty) {\
-			void *_v = _a[0]; \
-			switch (_id) {\
-			\
-			}\
-			_id -= 1; \
-		}\
-		else if (_c == KvMetaObject::WriteProperty) {\
-			void *_v = _a[0]; \
-			switch (_id) {\
-			\
-			}\
-			_id -= 1; \
-		}\
-		return _id; \
-	}\
-
-#define KV_REGISTER_READ_PROPERTY(INDEX, FUNC,TYPE) \
-			case INDEX: *reinterpret_cast<TYPE*>(_v) = FUNC(); break; \
-
-#define KV_REGISTER_WRITE_PROPERTY(INDEX, FUNC,TYPE) \
-			case INDEX: FUNC(*reinterpret_cast<TYPE*>(_v)); break; \
-
-#define KV_REGISTER_PROPERTY(Class, Super) \
-
-#define KV_END_REGISTER_PROPERTY()
-
 #define kv_comma ,
 #define kv_argment a
-#define kv_vargment _a
+#define kv_aargment _a
+#define kv_vargment _v
 
 //method
 #define kv_def_field_(t,a,v)  (*reinterpret_cast<t(*)>(a[v]))
@@ -173,75 +129,104 @@ struct kv_meta_stringdata_##Class{ \
 #define kv_def_s_elem_(a,v)  const_cast<void*>(reinterpret_cast<const void*>(&a##v))
 #define kv_def_elem_3(t,a,v) kv_def_s_elem_(a,v)
 
-#define kv_signal_fun_elem_0(r, data, index, element) \
-	BOOST_PP_IF(BOOST_PP_EQUAL(1, index), BOOST_PP_EMPTY(), BOOST_PP_COMMA())\
-	kv_def_elem_0(element, data, index)\
-
-#define kv_signal_fun_elem_1(r, data, index, element) \
-	BOOST_PP_IF(BOOST_PP_EQUAL(1,index), BOOST_PP_EMPTY,BOOST_PP_COMMA)()\
+#define kv_fun_elem_(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(index, 1), KV_PP_EMPTY, BOOST_PP_COMMA)()\
 	kv_def_elem_1(element, data, index)
 
-#define kv_signal_fun_elem_2(r, data, index, element) \
-	BOOST_PP_IF(BOOST_PP_EQUAL(1,index), BOOST_PP_EMPTY,BOOST_PP_COMMA)()\
+#define kv_fun_elem_0(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(index, 1), KV_PP_EMPTY, BOOST_PP_COMMA)()\
+	kv_def_elem_0(element, data, index)\
+
+#define kv_fun_elem_1(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(index, 1), KV_PP_EMPTY, BOOST_PP_COMMA)()\
+	kv_def_elem_1(element, data, index)
+
+#define kv_fun_elem_2(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(index, 1), KV_PP_EMPTY, BOOST_PP_COMMA)()\
 	kv_def_elem_2(element, data, index)
 
-#define kv_metacall_elem_(r, data, index, element) \
-	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(2, index)\
-	, kv_signal_fun_elem_0(r, data, BOOST_PP_SUB(index, 1), element)\
-	, BOOST_PP_EMPTY())
+#define kv_fun_elem_3(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(index, 1), KV_PP_EMPTY, BOOST_PP_COMMA)()\
+	kv_def_elem_3(element, data, index)
 
-#define kv_static_metacall_elem(r, data, index, element) \
-		case index: data->BOOST_PP_TUPLE_ELEM(1, element)\
-		(\
-			BOOST_PP_SEQ_FOR_EACH_I(\
-			BOOST_PP_CAT(kv_signal_fun_elem_, BOOST_PP_TUPLE_ELEM(0, element))\
-			, kv_vargment, BOOST_PP_TUPLE_TO_SEQ(element))\
-		); break; \
+#define kv_metacall_elem(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS(index, 2)\
+	, KV_PP_EMPTY\
+	, kv_fun_elem_0)(r, data, BOOST_PP_SUB(index, 1), element)
+
+#define KV_PP_DEFER(x) x KV_PP_EMPTY()
+#define KV_PP_EMPTY(...) BOOST_PP_EMPTY()
 
 #define KV_PP_SEQ_FOR_EACH_R_ID() BOOST_PP_SEQ_FOR_EACH_I 
-#define KV_PP_DEFER(x) x BOOST_PP_EMPTY()
+#define KV_PP_SEQ_FOR_EACH_SR_ID(data,index,element) \
+		case index: data->BOOST_PP_TUPLE_ELEM(1, element)\
+		(\
+		KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_metacall_elem, kv_aargment\
+			, BOOST_PP_TUPLE_TO_SEQ(element))\
+		); break;
+
+#define kv_static_metacall_elem_(r, data, index, element) \
+			case index: data->BOOST_PP_TUPLE_ELEM(1, element)\
+			(\
+			BOOST_PP_SEQ_FOR_EACH_I(\
+			BOOST_PP_CAT(kv_fun_elem_, BOOST_PP_TUPLE_ELEM(0, element))\
+			, kv_aargment, BOOST_PP_TUPLE_TO_SEQ(element))\
+			); break; 
+
 #define kv_static_metacall_elem0(r, data, index, element) \
 		case index: data->BOOST_PP_TUPLE_ELEM(1, element)\
 		(\
-			KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_metacall_elem_, kv_vargment\
+		KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_metacall_elem, kv_aargment\
 			, BOOST_PP_TUPLE_TO_SEQ(element))\
-		); break; \
+		); break;
 
-#define kv_signal_fun_elem_ex(r, data, index, element) \
-	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(2, index)\
-	, kv_def_elem_2(element, data, BOOST_PP_SUB(index, 1))\
-	, BOOST_PP_EMPTY())
+#define kv_static_metacall_elem1(r, data, index, element)\
+	BOOST_PP_IIF(BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_ELEM(0, element), 3)\
+	, KV_PP_EMPTY, KV_PP_SEQ_FOR_EACH_SR_ID)(data, index, element)
 
-#define kv_signal_fun_elem_ex2(r, data, index, element) \
-	BOOST_PP_IF(BOOST_PP_LESS_EQUAL(2, index)\
-	, kv_def_elem_3(element, data, BOOST_PP_SUB(index, 1))\
-	, BOOST_PP_EMPTY())
+#define kv_signal_elem(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS(index, 2)\
+	, KV_PP_EMPTY\
+	, kv_fun_elem_2)(r, data, BOOST_PP_SUB(index, 1), element)
+
+#define kv_signal_elem2(r, data, index, element) \
+	BOOST_PP_IF(BOOST_PP_LESS(index, 2)\
+	, KV_PP_EMPTY\
+	, kv_fun_elem_3)(r, data, BOOST_PP_SUB(index, 1), element)
 
 #define kv_signal_metacall(index,...)\
 	void ThisClass::BOOST_PP_TUPLE_ELEM(1, __VA_ARGS__)(\
-	KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_signal_fun_elem_ex, kv_vargment\
+	KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_signal_elem, kv_aargment\
 	, BOOST_PP_TUPLE_TO_SEQ(__VA_ARGS__)))\
 	{\
-		void *kv_vargment[] = { 0, \
-		KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_signal_fun_elem_ex2, kv_vargment\
-		, BOOST_PP_TUPLE_TO_SEQ(__VA_ARGS__))\
+		void *kv_aargment[] = { 0, \
+			\
+			KV_PP_DEFER(KV_PP_SEQ_FOR_EACH_R_ID)()(kv_signal_elem2, kv_aargment\
+			, BOOST_PP_TUPLE_TO_SEQ(__VA_ARGS__))\
 		}; \
-		KvMetaObject::activate(this, &staticMetaObject, index, kv_vargment); \
-	}\
+		KvMetaObject::activate(this, &staticMetaObject, index, kv_aargment); \
+	}
 
 #define kv_signal_metacall_elem(r, data, index, element) \
 	BOOST_PP_IF(BOOST_PP_EQUAL(2, BOOST_PP_TUPLE_ELEM(0, element)), \
-	kv_signal_metacall, BOOST_PP_EMPTY)(index,element)
+	kv_signal_metacall, KV_PP_EMPTY)(index, element)
+
+#define KV_BEGINE_REGISTER_CLASSINFO(...) \
+
+#define KV_REGISTER_CLASSINFO(Key,Value)\
+	(Method, Key, Value)\
+
+#define KV_END_REGISTER_CLASSINFO()
 
 #define KV_BEGINE_REGISTER_META(...) \
 	void ThisClass::kv_static_metacall(KvObject *_o, KvMetaObject::Call _c,\
-										int _id, void **kv_vargment)\
+										int _id, void **kv_aargment)\
 	{\
 		if (_c == KvMetaObject::InvokeMetaMethod) {\
 			assert(staticMetaObject.cast(_o)); \
 			ThisClass *_t = static_cast<ThisClass *>(_o); \
 			switch (_id) {\
-			BOOST_PP_SEQ_FOR_EACH_I(kv_static_metacall_elem0, _t\
+			BOOST_PP_SEQ_FOR_EACH_I(kv_static_metacall_elem1, _t\
 				, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))\
 			}\
 		}\
@@ -251,7 +236,7 @@ struct kv_meta_stringdata_##Class{ \
 	, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))\
 
 #define KV_META_REGISTER(Method,Function,...)\
-	(Method, Function, __VA_ARGS__)\
+	(KCLASSINFO_CODE, Function, __VA_ARGS__)\
 
 #define KV_REGISTER_METHOD(Function,...) \
 	KV_META_REGISTER(KMETHOD_CODE, Function, __VA_ARGS__)
@@ -262,25 +247,62 @@ struct kv_meta_stringdata_##Class{ \
 #define KV_REGISTER_SIGNAL(Function,...) \
 	KV_META_REGISTER(KSIGNAL_CODE, Function, __VA_ARGS__)\
 
-//#define Kv_FOR_EACH_ELEM(method,...)\
-//	BOOST_PP_SEQ_FOR_EACH_I(BOOST_PP_CAT(kv_signal_fun_elem_, method)\
-//	, kv_vargment, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
-//
-//#define KV_REGISTER_SIGNAL_0(Function,...)\
-//	void ThisClass::Function(\
-//			BOOST_PP_IF(BOOST_PP_IS_EMPTY(__VA_ARGS__)\
-//			,BOOST_PP_EMPTY\
-//			, Kv_FOR_EACH_ELEM)(KSIGNAL_CODE, __VA_ARGS__))\
-//	{\
-//		void *kv_vargment[] = { 0,\
-//			BOOST_PP_IF(BOOST_PP_IS_EMPTY(__VA_ARGS__)\
-//				,BOOST_PP_EMPTY\
-//				,Kv_FOR_EACH_ELEM)(3,__VA_ARGS__)\
-//		 };\
-//		KvMetaObject::activate(this, &staticMetaObject, 0, kv_vargment);\
-//	}\
-//
-
 #define KV_END_REGISTER_META()
+
+#define KV_PP_SEQ_FOR_EACH_RR_ID(data,index,element) \
+		case index: *reinterpret_cast<BOOST_PP_TUPLE_ELEM(1, element)*>(data)\
+		= BOOST_PP_TUPLE_ELEM(3, element)(); break;
+
+#define kv_metacall_read_elem(r, data, index, element)\
+	BOOST_PP_IIF(BOOST_PP_EQUAL(BOOST_PP_TUPLE_ELEM(0, element), 3)\
+	, KV_PP_SEQ_FOR_EACH_RR_ID, KV_PP_EMPTY)(data, index, element)
+
+#define KV_PP_SEQ_FOR_EACH_WR_ID(data,index,element) \
+		case index: BOOST_PP_TUPLE_ELEM(4, element)\
+		(*reinterpret_cast<BOOST_PP_TUPLE_ELEM(1, element)*>(data)); break;
+
+#define kv_metacall_write_elem(r, data, index, element)\
+	BOOST_PP_IIF(BOOST_PP_EQUAL(BOOST_PP_TUPLE_ELEM(0, element), 3)\
+	, KV_PP_SEQ_FOR_EACH_WR_ID, KV_PP_EMPTY)(data, index, element)
+
+#define KV_BEGINE_REGISTER_PROPERTY(...) \
+	int ThisClass::kv_metacall(KvMetaObject::Call _c, int _id, void **kv_aargment)	\
+	{	\
+		_id = BaseClass::kv_metacall(_c, _id, kv_aargment); \
+		if (_id < 0)\
+			return _id; \
+		if (_c == KvMetaObject::InvokeMetaMethod) {\
+			if (_id < BOOST_PP_SEQ_SIZE(BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)))\
+				kv_static_metacall(this, _c, _id, kv_aargment); \
+			_id -= 1; \
+		}\
+		else if (_c == KvMetaObject::ReadProperty) {\
+			\
+			void *kv_vargment = kv_aargment[0]; \
+			switch (_id) {\
+			BOOST_PP_SEQ_FOR_EACH_I(kv_metacall_read_elem, kv_vargment\
+			, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))\
+			}\
+			_id -= 1; \
+		}\
+		else if (_c == KvMetaObject::WriteProperty) {\
+			void *_v = _a[0]; \
+			switch (_id) {\
+			BOOST_PP_SEQ_FOR_EACH_I(kv_metacall_write_elem, kv_vargment\
+			, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))\
+			}\
+			_id -= 1; \
+		}\
+		return _id; \
+	}\
+
+#define KV_REGISTER_PROPERTY(Type, Name, R, W)\
+	(KPROPERTY_CODE, Type, Name, R, W)\
+
+#define KV_END_REGISTER_PROPERTY()
+
+#define KV_COMPUTE_META_DATA(Class, Super,...)\
+
+#define KV_COMPUTE_STRING_DATA(Class, Super,...)\
 
 #endif // KvObjectdefs_h__

@@ -35,6 +35,7 @@ static const char kv_meta_stringdata_SignalSlotTest[] = {
 
 KV_BEGINE_REGISTER_CLASS
 	(SignalSlotTest, KvObject
+	,KV_REGISTER_PROPERTY(bool, enabled, isEnabled, setEnabled)
 	,KV_REGISTER_SIGNAL(enabledStateChanged, SignalSlotTest *)
 	,KV_REGISTER_SLOT(SayHello)
 	,KV_REGISTER_SLOT(CallOneParam, int)
