@@ -2,6 +2,13 @@
 #define KvMetaType_h__
 
 #include "Kvms.h"
+#include "KvString.h"
+
+#include <new>
+
+#include <vector>
+#include <list>
+#include <map>
 
 class KV_CORE_EXPORT KvMetaType
 {
@@ -10,7 +17,7 @@ public:
 		// these are merged with KvVariant
 		Void = 0, Bool = 1, Int = 2, UInt = 3, LongLong = 4, ULongLong = 5,
 		Double = 6, QChar = 7, QVariantMap = 8, QVariantList = 9,
-		QString = 10, QStringList = 11, QByteArray = 12, QBitArray = 13,
+		KvString = 10, QStringList = 11, QByteArray = 12, QBitArray = 13,
 		QDate = 14, QTime = 15, QDateTime = 16, QUrl = 17,
 		QLocale = 18, QRect = 19, QRectF = 20, QSize = 21, QSizeF = 22,
 		QLine = 23, QLineF = 24, QPoint = 25, QPointF = 26, QRegExp = 27,
@@ -32,13 +39,12 @@ public:
 		QVariant = 138,
 		LastCoreExtType = QVariant,
 
-		// This logic must match the one in KvGlobal.h
 #if defined(KV_NO_FPU) || defined(KV_ARCH_ARM) || defined(KV_ARCH_WINDOWSCE) || defined(KV_ARCH_SYMBIAN)
 		QReal = Float,
 #else
 		QReal = Double,
 #endif
-
+		UnknownType,
 		User = 256
 	};
 
@@ -64,7 +70,7 @@ struct  KvMetaTypeId2
 };
 
 template <typename T>
-inline int kMetaTypeId(T * /* dummy */ = 0)
+inline int kvMetaTypeId(T * /* dummy */ = 0)
 {
 	return KvMetaTypeId2<T>::kv_metatype_id();
 }
@@ -77,8 +83,7 @@ inline int kMetaTypeId(T * /* dummy */ = 0)
 	}; 
 
 
-#include <string>	//KvString == std::string
-K_DECLARE_BUILTIN_METATYPE(std::string,QString)
+K_DECLARE_BUILTIN_METATYPE(KvString, KvString)
 K_DECLARE_BUILTIN_METATYPE(int, Int)
 K_DECLARE_BUILTIN_METATYPE(uint, UInt)
 K_DECLARE_BUILTIN_METATYPE(bool, Bool)

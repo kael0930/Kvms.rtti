@@ -28,10 +28,10 @@ static void construct(KvVariant::Private *x, const void *copy)
 		x->data.o = copy ? *static_cast<KvObject *const*>(copy) : 0;
 		break;
 	case KvVariant::LongLong:
-		x->data.ll = copy ? *static_cast<const qlonglong *>(copy) : K_INT64_C(0);
+		x->data.ll = copy ? *static_cast<const klonglong *>(copy) : K_INT64_C(0);
 		break;
 	case KvVariant::ULongLong:
-		x->data.ull = copy ? *static_cast<const qulonglong *>(copy) : K_UINT64_C(0);
+		x->data.ull = copy ? *static_cast<const kulonglong *>(copy) : K_UINT64_C(0);
 		break;
 	case KvVariant::Invalid:
 	case KvVariant::UserType:
@@ -187,6 +187,36 @@ KvVariant::KvVariant(const KvVariant &other)
 	}
 }
 
+KvVariant::KvVariant(int val)
+{
+	d.is_null = false; d.type = Int; d.data.i = val;
+}
+
+KvVariant::KvVariant(uint val)
+{
+	d.is_null = false; d.type = UInt; d.data.u = val;
+}
+
+KvVariant::KvVariant(klonglong val)
+{
+	d.is_null = false; d.type = LongLong; d.data.ll = val;
+}
+
+KvVariant::KvVariant(kulonglong val)
+{
+	d.is_null = false; d.type = ULongLong; d.data.ull = val;
+}
+
+KvVariant::KvVariant(bool val)
+{
+	d.is_null = false; d.type = Bool; d.data.b = val;
+}
+
+KvVariant::KvVariant(double val)
+{
+	d.is_null = false; d.type = Double; d.data.d = val;
+}
+
 KvVariant::KvVariant(const KvString &val)
 {
 	d.is_null = false; 
@@ -300,7 +330,7 @@ template<typename T>
 inline T kNumVariantToHelper(const KvVariant::Private &d,
 	const KvVariant::Handler *handler, bool *ok, const T &val)
 {
-	uint t = kMetaTypeId<T>();
+	uint t = kvMetaTypeId<T>();
 	if (ok)
 		*ok = true;
 	if (d.type == t)
@@ -327,6 +357,17 @@ inline T kVariantToHelper(const KvVariant::Private &d, KvVariant::Type t,
 	T ret;
 	handler->convert(&d, t, &ret, 0);
 	return ret;
+}
+
+bool KvVariant::toBool() const
+{
+	if (d.type == Bool)
+		return d.data.b;
+
+	bool res = false;
+	handler->convert(&d, Bool, &res, 0);
+
+	return res;
 }
 
 KvString KvVariant::toString() const

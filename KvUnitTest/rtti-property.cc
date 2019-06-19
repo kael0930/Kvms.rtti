@@ -8,12 +8,12 @@ TEST(KvRttiTest, DefaultConstructor)
 
 TEST(KvRttiTest, Property)
 {
-	KvObject *obj = new KvObject();
+	/*KvObject *obj = new KvObject();
 
 	KvVariant v = obj->property("objectName");
 	KvString s = v.toString();
-	obj->setProperty("objectName", KvString("Kvobject"));
+	obj->setProperty("objectName", KvString("123"));
 	v = obj->property("objectName");
 	s = v.toString();
-	int i = 0;
+	int i = 0;*/
 }

@@ -40,3 +40,8 @@ void kvFreeAligned(void *ptr)
 	void **ptr2 = static_cast<void **>(ptr);
 	free(ptr2[-1]);
 }
+
+void * kvMemCopy(void *dest, const void *src, size_t n)
+{
+	return memcpy(dest, src, n);
+}

@@ -36,6 +36,12 @@
     <ClCompile Include="KvVector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="KvArrayData.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="KvRefCount.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KvUtils.h">
@@ -63,6 +69,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="KvVector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvArrayData.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvStringLiteral.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvRefCount.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

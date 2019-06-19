@@ -89,7 +89,7 @@ bool KvIODevice::isWritable() const
 bool KvIODevice::open(Kv::OpenMode mode)
 {
 	d->openMode = mode;
-	d->pos = (mode & Kv::Append) ? size() : qint64(0);
+	d->pos = (mode & Kv::Append) ? size() : kint64(0);
 	d->buffer.clear();
 	d->firstRead = true;
 	return true;
@@ -109,31 +109,31 @@ void KvIODevice::close()
 	d->firstRead = true;
 }
 
-qint64 KvIODevice::pos() const
+kint64 KvIODevice::pos() const
 {
 	return d->pos;
 }
 
-qint64 KvIODevice::size() const
+kint64 KvIODevice::size() const
 {
-	return isSequential() ? bytesAvailable() : qint64(0);
+	return isSequential() ? bytesAvailable() : kint64(0);
 }
 
-bool KvIODevice::seek(qint64 pos)
+bool KvIODevice::seek(kint64 pos)
 {
 	if (d->openMode == Kv::NotOpen || pos < 0)
 	{
 		return false;
 	}
 
-	qint64 offset = pos - d->pos;
+	kint64 offset = pos - d->pos;
 	if (!isSequential())
 	{
 		d->pos = pos;
 		d->devicePos = pos;
 	}
 
-	if (offset < 0 || offset >= qint64(d->buffer.size()))
+	if (offset < 0 || offset >= kint64(d->buffer.size()))
 	{
 		d->buffer.clear();
 	}
@@ -156,39 +156,39 @@ bool KvIODevice::reset()
 	return seek(0);
 }
 
-qint64 KvIODevice::bytesAvailable() const
+kint64 KvIODevice::bytesAvailable() const
 {
 	if (!isSequential())
 	{
-		return kvMax(size() - d->pos, qint64(0));
+		return kvMax(size() - d->pos, kint64(0));
 	}
 	return d->buffer.size();
 }
 
-qint64 KvIODevice::bytesToWrite() const
+kint64 KvIODevice::bytesToWrite() const
 {
-	return qint64(0);
+	return kint64(0);
 }
 
-KvByteArray KvIODevice::read(qint64 maxSize)
+KvByteArray KvIODevice::read(kint64 maxSize)
 {
 	KvByteArray result;
 
 	CHECK_MAXLEN(read, result);
 
-	if (maxSize != qint64(int(maxSize))) 
+	if (maxSize != kint64(int(maxSize))) 
 	{
 		printf("QIODevice::read: maxSize argument exceeds QByteArray size limit");
 		maxSize = INT_MAX;
 	}
 
-	qint64 readBytes = 0;
+	kint64 readBytes = 0;
 	if (maxSize)
 	{
 		result.resize(int(maxSize));
 		if (!result.size())
 		{
-			qint64 readResult;
+			kint64 readResult;
 			do 
 			{
 				result.resize(int(kvMin(maxSize, result.size() + IODEVICE_BUFFERSIZE)));
@@ -217,7 +217,7 @@ KvByteArray KvIODevice::read(qint64 maxSize)
 	return result;
 }
 
-qint64 KvIODevice::read(char *data, qint64 maxSize)
+kint64 KvIODevice::read(char *data, kint64 maxSize)
 {
 	if (maxSize == 1)
 	{
@@ -232,12 +232,12 @@ qint64 KvIODevice::read(char *data, qint64 maxSize)
 				continue;
 			}
 			*data = c;
-			return qint64(1);
+			return kint64(1);
 		}
 	}
 
-	CHECK_MAXLEN(read, qint64(-1));
-	qint64 readSoFar = 0;
+	CHECK_MAXLEN(read, kint64(-1));
+	kint64 readSoFar = 0;
 	bool moreToRead = true;
 	do 
 	{
@@ -251,7 +251,7 @@ qint64 KvIODevice::read(char *data, qint64 maxSize)
 KvByteArray KvIODevice::readAll()
 {
 	KvByteArray result;
-	qint64 readBytes = 0;
+	kint64 readBytes = 0;
 
 	// flush internal read buffer
 	if (!(d->openMode & Kv::Text) && !d->buffer.isEmpty()) 
@@ -261,11 +261,11 @@ KvByteArray KvIODevice::readAll()
 		d->pos += readBytes;
 	}
 
-	qint64 theSize;
+	kint64 theSize;
 	if (isSequential() || (theSize = size()) == 0) 
 	{
 		// Size is unknown, read incrementally.
-		qint64 readResult;
+		kint64 readResult;
 		do {
 			result.resize(result.size() + IODEVICE_BUFFERSIZE);
 			readResult = read(result.data() + readBytes, result.size() - readBytes);
@@ -289,17 +289,17 @@ KvByteArray KvIODevice::readAll()
 	return result;
 }
 
-qint64 KvIODevice::readLine(char *data, qint64 maxSize)
+kint64 KvIODevice::readLine(char *data, kint64 maxSize)
 {
 	if (maxSize < 2) {
 		printf("IODevice::readLine: Called with maxSize < 2");
-		return qint64(-1);
+		return kint64(-1);
 	}
 
 	// Leave room for a '\0'
 	--maxSize;
 
-	qint64 readSoFar = 0;
+	kint64 readSoFar = 0;
 	const bool sequential = isSequential();
 	if (!d->buffer.isEmpty())
 	{
@@ -324,9 +324,9 @@ qint64 KvIODevice::readLine(char *data, qint64 maxSize)
 	}
 
 	if (d->pos != d->devicePos && !sequential && !seek(d->pos))
-		return qint64(-1);
+		return kint64(-1);
 	d->baseReadLineDataCalled = false;
-	qint64 readBytes = readLineData(data + readSoFar, maxSize - readSoFar);
+	kint64 readBytes = readLineData(data + readSoFar, maxSize - readSoFar);
 	if (readBytes < 0) 
 	{
 		data[readSoFar] = '\0';
@@ -338,7 +338,7 @@ qint64 KvIODevice::readLine(char *data, qint64 maxSize)
 		d->pos += readBytes;
 		// If the base implementation was not called, then we must
 		// assume the device position is invalid and force a seek.
-		d->devicePos = qint64(-1);
+		d->devicePos = kint64(-1);
 	}
 	data[readSoFar] = '\0';
 
@@ -359,25 +359,25 @@ bool KvIODevice::canReadLine() const
 	return d->buffer.canReadLine();
 }
 
-qint64 KvIODevice::write(const char *data, qint64 maxSize)
+kint64 KvIODevice::write(const char *data, kint64 maxSize)
 {
-	CHECK_WRITABLE(write, qint64(-1));
-	CHECK_MAXLEN(write, qint64(-1));
+	CHECK_WRITABLE(write, kint64(-1));
+	CHECK_MAXLEN(write, kint64(-1));
 
 	const bool sequential = isSequential();
 	if (d->pos != d->devicePos && !sequential && !seek(d->pos));
 	{
-		return qint64(-1);
+		return kint64(-1);
 	}
 
 	if (d->openMode & Kv::Text)
 	{
-		qint64 writtenSoFar = 0;
+		kint64 writtenSoFar = 0;
 
 		return writtenSoFar;
 	}
 
-	qint64 written = writeData(data, maxSize);
+	kint64 written = writeData(data, maxSize);
 	if (written > 0)
 	{
 		if (!isSequential())
@@ -393,7 +393,7 @@ qint64 KvIODevice::write(const char *data, qint64 maxSize)
 	return written;
 }
 
-qint64 KvIODevice::write(const char *data)
+kint64 KvIODevice::write(const char *data)
 {
 	return write(data, kvstrlen(data));
 }
@@ -403,9 +403,9 @@ KvString KvIODevice::errorString() const
 	return d->errorString;
 }
 
-qint64 KvIODevice::readLineData(char *data, qint64 maxSize)
+kint64 KvIODevice::readLineData(char *data, kint64 maxSize)
 {
-	qint64 readSoFar = 0;
+	kint64 readSoFar = 0;
 	char c = 0;
 	int lastReadReturn = 0;
 	d->baseReadLineDataCalled = true;

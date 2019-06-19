@@ -82,9 +82,12 @@
     <ClCompile Include="KvMalloc.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="KvCompilerDetaction.h" />
+    <ClInclude Include="KvConfig.h" />
     <ClInclude Include="KvGlobal.h" />
     <ClInclude Include="KvNameSpace.h" />
     <ClInclude Include="KvPlatformdefs.h" />
+    <ClInclude Include="KvTypeInfo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

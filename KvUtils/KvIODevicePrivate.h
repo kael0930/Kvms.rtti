@@ -18,7 +18,7 @@ class KvLinearBuffer
 	// the allocated buffer
 	char* data;
 	// allocated buffer size
-	qint64 capacity;
+	kint64 capacity;
 
 public:
 	KvLinearBuffer(int) : length(0), first(0), data(0), capacity(0) {
@@ -139,7 +139,7 @@ public:
 private:
 	enum FreeSpacePos { freeSpaceAtStart, freeSpaceAtEnd };
 	void makeSpace(size_t required, FreeSpacePos where) {
-		size_t newCapacity = kvMax(capacity, qint64(IODEVICE_BUFFERSIZE));
+		size_t newCapacity = kvMax(capacity, kint64(IODEVICE_BUFFERSIZE));
 		while (newCapacity < required)
 			newCapacity *= 2;
 		int moveOffset = (where == freeSpaceAtEnd) ? 0 : newCapacity - length;
@@ -173,12 +173,12 @@ public:
 
 	KvLinearBuffer buffer;
 
-	qint64 pos;
-	qint64 devicePos;
+	kint64 pos;
+	kint64 devicePos;
 	// these three are for fast position updates during read, avoiding isSequential test
-	qint64 seqDumpPos;
-	qint64 *pPos;
-	qint64 *pDevicePos;
+	kint64 seqDumpPos;
+	kint64 *pPos;
+	kint64 *pDevicePos;
 	bool baseReadLineDataCalled;
 	bool firstRead;
 };

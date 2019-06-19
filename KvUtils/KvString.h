@@ -2,6 +2,7 @@
 #define KvString_h__
 
 #include "KvUtils.h"
+#include "KvByteArray.h"
 
 class KV_UTILS_EXPORT KvString
 {

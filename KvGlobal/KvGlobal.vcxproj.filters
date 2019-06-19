@@ -35,5 +35,14 @@
     <ClInclude Include="KvPlatformdefs.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="KvConfig.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvCompilerDetaction.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KvTypeInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

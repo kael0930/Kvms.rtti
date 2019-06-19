@@ -97,7 +97,7 @@ public:
 
 	Connection *senders;     // linked list of connections connected to this object
 	Sender *currentSender;   // object currently activating the object
-	mutable quint32 connectedSignals[2];
+	mutable kuint32 connectedSignals[2];
 
 	// preserve binary compatibility with code compiled without Qt 3 support
 	// keeping the binary layout stable helps the Qt Creator debugger

@@ -251,7 +251,10 @@ bool KvObject::connect(const KvObject * sender, const char *signal,
 	const KvMetaObject *smeta = sender->metaObject();
 	const char *signal_arg = signal;
 	++signal; //skip code
-	int signal_index = KvMetaObjectPrivate::indexOfSignalRelative(&smeta, signal, false);
+
+	KvArgumentTypeArray  signalTypes;
+	KvByteArray signalName = KvMetaObjectPrivate::decodeMethodSignature(signal, signalTypes);
+	int signal_index = KvMetaObjectPrivate::indexOfSignalRelative(&smeta, signalName, false);
 	if (signal_index < 0) {
 		// check for normalized signatures
 		tmp_signal_name = KvMetaObject::normalizedSignature(signal - 1);
@@ -262,7 +265,6 @@ bool KvObject::connect(const KvObject * sender, const char *signal,
 	}
 	if (signal_index < 0) {
 		// re-use tmp_signal_name and signal from above
-
 		smeta = sender->metaObject();
 		signal_index = KvMetaObjectPrivate::indexOfSignalRelative(&smeta, signal, true);
 	}
@@ -789,42 +791,63 @@ bool KvMetaObjectPrivate::disconnectHelper(KvObjectPrivate::Connection *c, const
 ///
 //////////////////////////////////////////////////////////////////////////
 
-static const uint kv_meta_data_QObject[] = {
-
-	// content:
-	6,       // revision
-	0,       // classname
-	0, 0,	// classinfo
-	4, 14,	// methods
-	1, 34, // properties
-	0, 0, // enums/sets
-	2, 37, // constructors
-	0,       // flags
-	2,       // signalCount
-
-	// signals: signature, parameters, type, tag, flags
-	9 + 1, 8, 8, 8, 0x05,
-	29 + 2, 8, 8, 8, 0x25,
-
-	// slots: signature, parameters, type, tag, flags
-	41 + 2, 8, 8, 8, 0x0a,
-	55 + 2, 8, 8, 8, 0x08,
-
-	// properties: name, type, flags
-	90 + 3, 82, 0x0a095103,
-
-	// constructors: signature, parameters, type, tag, flags
-	108 + 3, 101, 8, 8, 0x0e,
-	126 + 5, 8, 8, 8, 0x2e,
-
-	0        // eod
+struct kv_meta_stringdata_KvObject_t {
+	KvByteArrayData data[4];
+	char stringdata0[45];
 };
 
-static const char kv_meta_stringdata_QObject[] = {
-	"KvObject\0\0destroyed(KvObject*)\0destroyed()\0"
-	"deleteLater()\0_q_reregisterTimers(void*)\0"
-	"KvString\0objectName\0parent\0KvObject(KvObject*)\0"
-	"KvObject()\0"
+static const kv_meta_stringdata_KvObject_t kv_meta_stringdata_KvObject = {
+	{
+		KV_META_LITERAL(KvObject,0, 0, 8), // "QObject"
+		KV_META_LITERAL(KvObject, 1, 9, 9), // "destroyed"
+		KV_META_LITERAL(KvObject, 2, 19, 10), // "objectName"
+		KV_META_LITERAL(KvObject, 3, 30, 11), // "deleteLater"
+	},
+	"KvObject\0destroyed\0objectName\0deleteLater"
+};
+
+static const uint kv_meta_data_KvObject[] = {
+
+	// content:
+	7,       // revision
+	0,       // classname
+	0, 0, // classinfo
+	3, 14, // methods
+	1, 27, // properties
+	0, 0, // enums/sets
+	2, 58, // constructors
+	0,       // flags
+	3,       // signalCount
+
+	// signals: name, argc, parameters, tag, flags
+	1, 1, 39, 2, 0x06 /* Public */,
+	1, 0, 42, 2, 0x26 /* Public | MethodCloned */,
+
+	// slots: name, argc, parameters, tag, flags
+	3, 0, 46, 2, 0x0a /* Public */,
+
+	// signals: parameters
+	KvMetaType::Void, KvMetaType::QObjectStar, 2,
+	KvMetaType::Void,
+
+	// slots: parameters
+	KvMetaType::Void,
+
+	// constructors: parameters
+	0x80000000 | 2, KvMetaType::QObjectStar, 7,
+	0x80000000 | 2,
+
+	// properties: name, type, flags
+	2, KvMetaType::KvString, 0x00495103,
+
+	// properties: notify_signal_id
+	2,
+
+	// constructors: name, argc, parameters, tag, flags
+	0, 1, 50, 2, 0x0e /* Public */,
+	0, 0, 53, 2, 0x2e /* Public | MethodCloned */,
+
+	0        // eod
 };
 
 void KvObject::kv_static_metacall(KvObject *_o, KvMetaObject::Call _c, int _id, void **_a)
@@ -844,7 +867,6 @@ void KvObject::kv_static_metacall(KvObject *_o, KvMetaObject::Call _c, int _id, 
 		case 0: _t->destroyed((*reinterpret_cast<KvObject*(*)>(_a[1]))); break;
 		case 1: _t->destroyed(); break;
 		case 2: _t->deleteLater(); break;
-			//case 3: _t->d_func()->_q_reregisterTimers((*reinterpret_cast<void*(*)>(_a[1]))); break;
 		default:;
 		}
 	}
@@ -855,8 +877,8 @@ const KvMetaObjectExtraData KvObject::staticMetaObjectExtraData = {
 };
 
 const KvMetaObject KvObject::staticMetaObject = {
-	{ 0, kv_meta_stringdata_QObject,
-	kv_meta_data_QObject, &staticMetaObjectExtraData }
+	{ 0, kv_meta_stringdata_KvObject.data,
+	kv_meta_data_KvObject, &staticMetaObjectExtraData }
 };
 
 #ifdef K_NO_DATA_RELOCATION
@@ -871,7 +893,7 @@ const KvMetaObject *KvObject::metaObject() const
 void *KvObject::kv_metacast(const char *_clname)
 {
 	if (!_clname) return 0;
-	if (!strcmp(_clname, kv_meta_stringdata_QObject))
+	if (!strcmp(_clname, kv_meta_stringdata_KvObject.stringdata0))
 		return static_cast<void*>(const_cast<KvObject*>(this));
 	return 0;
 }

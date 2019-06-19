@@ -52,7 +52,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KVUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../KvGlobal</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../KvGlobal;../KvMath</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -80,19 +80,24 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="KvArrayData.cpp" />
     <ClCompile Include="KvByteArray.cpp" />
     <ClCompile Include="KvIODevice.cpp" />
     <ClCompile Include="KvList.cpp" />
+    <ClCompile Include="KvRefCount.cpp" />
     <ClCompile Include="KvString.cpp" />
     <ClCompile Include="KvUtils.cpp" />
     <ClCompile Include="KvVector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="KvArrayData.h" />
     <ClInclude Include="KvByteArray.h" />
     <ClInclude Include="KvIODevice.h" />
     <ClInclude Include="KvIODevicePrivate.h" />
     <ClInclude Include="KvList.h" />
+    <ClInclude Include="KvRefCount.h" />
     <ClInclude Include="KvString.h" />
+    <ClInclude Include="KvStringLiteral.h" />
     <ClInclude Include="KvUtils.h" />
     <ClInclude Include="KvVarLengthArray.h" />
     <ClInclude Include="KvVector.h" />

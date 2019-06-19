@@ -84,6 +84,13 @@ public:
 	KvVariant(int typeOrUserType, const void *copy, uint flags);
 	KvVariant(const KvVariant &other);
 
+	KvVariant(int i);
+	KvVariant(uint val);
+	KvVariant(klonglong val);
+	KvVariant(kulonglong val);
+	KvVariant(bool val);
+	KvVariant(double val);
+
 	KvVariant(const KvString &string);
 
 	Type type() const;
@@ -103,8 +110,8 @@ public:
 
 	int toInt(bool *ok = 0) const;
 	uint toUInt(bool *ok = 0) const;
-	qlonglong toLongLong(bool *ok = 0) const;
-	qulonglong toULongLong(bool *ok = 0) const;
+	klonglong toLongLong(bool *ok = 0) const;
+	kulonglong toULongLong(bool *ok = 0) const;
 	bool toBool() const;
 	double toDouble(bool *ok = 0) const;
 	float toFloat(bool *ok = 0) const;
@@ -147,9 +154,9 @@ public:
 			bool b;
 			double d;
 			float f;
-			qreal real;
-			qlonglong ll;
-			qulonglong ull;
+			kreal real;
+			klonglong ll;
+			kulonglong ull;
 			KvObject *o;
 			void *ptr;
 			PrivateShared *shared;
@@ -171,7 +178,7 @@ public:
 	 typedef bool(*f_compare)(const Private *, const Private *);
 	 typedef bool(*f_convert)(const KvVariant::Private *d, Type t, void *, bool *);
 	 typedef bool(*f_canConvert)(const KvVariant::Private *d, Type t);
-	 //typedef void(*f_debugStream)(QDebug, const QVariant &);
+	 //typedef void(*f_debugStream)(QDebug, const KvVariant &);
 	 struct Handler {
 		 f_construct construct;
 		 f_clear clear;
@@ -217,7 +224,7 @@ inline T *v_cast(KvVariant::Private *d, T * = 0)
 		: static_cast<T *>(static_cast<void *>(&d->data.c)));
 }
 
-//a simple template that avoids to allocate 2 memory chunks when creating a QVariant
+//a simple template that avoids to allocate 2 memory chunks when creating a KvVariant
 template <class T> class KvVariantPrivateSharedEx : public KvVariant::PrivateShared
 {
 public:

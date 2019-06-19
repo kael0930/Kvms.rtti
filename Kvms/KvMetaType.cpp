@@ -1,5 +1,5 @@
 #include "KvMetaType.h"
-#include "KvString.h"
+#include "KvMetaObject.h"
 
 #define KV_ADD_STATIC_METATYPE(STR, TP) \
 	{ STR, sizeof(STR)-1, TP }
@@ -12,16 +12,16 @@ static const struct { const char * typeName; int typeNameLength; int type; } typ
 	KV_ADD_STATIC_METATYPE("bool", KvMetaType::Bool),
 	KV_ADD_STATIC_METATYPE("int", KvMetaType::Int),
 	KV_ADD_STATIC_METATYPE("uint", KvMetaType::UInt),
-	KV_ADD_STATIC_METATYPE("qlonglong", KvMetaType::LongLong),
-	KV_ADD_STATIC_METATYPE("qulonglong", KvMetaType::ULongLong),
+	KV_ADD_STATIC_METATYPE("klonglong", KvMetaType::LongLong),
+	KV_ADD_STATIC_METATYPE("kulonglong", KvMetaType::ULongLong),
 	KV_ADD_STATIC_METATYPE("double", KvMetaType::Double),
 	KV_ADD_STATIC_METATYPE("QChar", KvMetaType::QChar),
 	KV_ADD_STATIC_METATYPE("QVariantMap", KvMetaType::QVariantMap),
 	KV_ADD_STATIC_METATYPE("QVariantList", KvMetaType::QVariantList),
-	KV_ADD_STATIC_METATYPE("QString", KvMetaType::QString),
+	KV_ADD_STATIC_METATYPE("KvString", KvMetaType::KvString),
 
 	// let QMetaTypeId2 figure out the type at compile time
-	//KV_ADD_STATIC_METATYPE("qreal", QMetaTypeId2<qreal>::MetaType),
+	//KV_ADD_STATIC_METATYPE("kreal", QMetaTypeId2<kreal>::MetaType),
 
 	{ 0, 0, KvMetaType::Void }
 };
@@ -29,7 +29,7 @@ static const struct { const char * typeName; int typeNameLength; int type; } typ
 /*! \internal
 Similar to type(), but only looks in the static set of types.
 */
-static inline int kMetaTypeStaticType(const char *typeName, int length)
+static inline int kvMetaTypeStaticType(const char *typeName, int length)
 {
 	int i = 0;
 	while (types[i].typeName && ((length != types[i].typeNameLength)
@@ -39,12 +39,34 @@ static inline int kMetaTypeStaticType(const char *typeName, int length)
 	return types[i].type;
 }
 
+static int kvMetaTypeCustomType_unlocked(const char *typeName, int length, int *firstInvalidIndex = 0)
+{
+	//const QVector<QCustomTypeInfo> * const ct = customTypes();
+	//if (!ct)
+	//	return KvMetaType::UnknownType;
+
+	//if (firstInvalidIndex)
+	//	*firstInvalidIndex = -1;
+	//for (int v = 0; v < ct->count(); ++v) {
+	//	const QCustomTypeInfo &customInfo = ct->at(v);
+	//	if ((length == customInfo.typeName.size())
+	//		&& !memcmp(typeName, customInfo.typeName.constData(), length)) {
+	//		if (customInfo.alias >= 0)
+	//			return customInfo.alias;
+	//		return v + QMetaType::User;
+	//	}
+	//	if (firstInvalidIndex && (*firstInvalidIndex < 0) && customInfo.typeName.isEmpty())
+	//		*firstInvalidIndex = v;
+	//}
+	return KvMetaType::UnknownType;
+}
+
 int KvMetaType::type(const char *typeName)
 {
-	int length = kstrlen(typeName);
+	int length = kvstrlen(typeName);
 	if (!length)
 		return 0;
-	int type = kMetaTypeStaticType(typeName, length);
+	int type = kvMetaTypeStaticType(typeName, length);
 	if (!type) 
 	{
 		//用户自定义数据类型;
@@ -111,9 +133,9 @@ void * KvMetaType::construct(int type, const void *copy /*= 0*/)
 		case KvMetaType::UInt:
 			return new uint(*static_cast<const uint*>(copy));
 		case KvMetaType::LongLong:
-			return new qlonglong(*static_cast<const qlonglong*>(copy));
+			return new klonglong(*static_cast<const klonglong*>(copy));
 		case KvMetaType::ULongLong:
-			return new qulonglong(*static_cast<const qulonglong*>(copy));
+			return new kulonglong(*static_cast<const kulonglong*>(copy));
 		case KvMetaType::UShort:
 			return new ushort(*static_cast<const ushort*>(copy));
 		case KvMetaType::UChar:
@@ -125,7 +147,7 @@ void * KvMetaType::construct(int type, const void *copy /*= 0*/)
 		case KvMetaType::Double:
 			return new double(*static_cast<const double*>(copy));
 
-		case KvMetaType::QString:
+		case KvMetaType::KvString:
 			return new NS(KvString)(*static_cast<const NS(KvString)*>(copy));
 
 		case KvMetaType::Void:
@@ -154,9 +176,9 @@ void * KvMetaType::construct(int type, const void *copy /*= 0*/)
 		case KvMetaType::UInt:
 			return new uint;
 		case KvMetaType::LongLong:
-			return new qlonglong;
+			return new klonglong;
 		case KvMetaType::ULongLong:
-			return new qulonglong;
+			return new kulonglong;
 		case KvMetaType::UShort:
 			return new ushort;
 		case KvMetaType::UChar:
@@ -168,7 +190,7 @@ void * KvMetaType::construct(int type, const void *copy /*= 0*/)
 		case KvMetaType::Double:
 			return new double;
 
-		case KvMetaType::QString:
+		case KvMetaType::KvString:
 			return new NS(KvString);
 
 		case KvMetaType::Void:
@@ -225,10 +247,10 @@ void KvMetaType::destroy(int type, void *data)
 		delete static_cast<ulong*>(data);
 		break;
 	case KvMetaType::LongLong:
-		delete static_cast<qlonglong*>(data);
+		delete static_cast<klonglong*>(data);
 		break;
 	case KvMetaType::ULongLong:
-		delete static_cast<qulonglong*>(data);
+		delete static_cast<kulonglong*>(data);
 		break;
 	case KvMetaType::UInt:
 		delete static_cast<uint*>(data);
@@ -249,7 +271,7 @@ void KvMetaType::destroy(int type, void *data)
 		delete static_cast<double*>(data);
 		break;
 
-	case KvMetaType::QString:
+	case KvMetaType::KvString:
 		delete static_cast<NS(KvString)*>(data);
 		break;
 
@@ -302,4 +324,31 @@ void KvMetaType::unregisterType(const char *typeName)
 		}
 	}
 #endif
+}
+
+template <bool tryNormalizedType>
+static inline int kvMetaTypeTypeImpl(const char *typeName, int length)
+{
+	if (!length)
+		return KvMetaType::UnknownType;
+	int type = kvMetaTypeStaticType(typeName, length);
+	if (type == KvMetaType::UnknownType) {
+		//QReadLocker locker(customTypesLock());
+		type = kvMetaTypeCustomType_unlocked(typeName, length);
+		if ((type == KvMetaType::UnknownType) && tryNormalizedType) {
+			const NS(KvByteArray) normalizedTypeName = KvMetaObject::normalizedType(typeName);
+			type = kvMetaTypeStaticType(normalizedTypeName.constData(),
+				normalizedTypeName.size());
+			if (type == KvMetaType::UnknownType) {
+				type = kvMetaTypeCustomType_unlocked(normalizedTypeName.constData(),
+					normalizedTypeName.size());
+			}
+		}
+	}
+	return type;
+}
+
+int kvMetaTypeTypeInternal(const char *typeName)
+{
+	return kvMetaTypeTypeImpl</*tryNormalizedType=*/false>(typeName, kvstrlen(typeName));
 }

@@ -9,11 +9,15 @@ class SignalSlotTest : public KvObject
 
 public:
 	SignalSlotTest();
+	SignalSlotTest(int) {}
 	~SignalSlotTest();
 
 K_PROPERTY:
 	bool isEnabled() const;
 	void setEnabled(bool enabled);
+
+	KvString GetName() const;
+	void SetName(const KvString &);
 
 K_SIGNALS:
 	void enabledStateChanged(SignalSlotTest *);

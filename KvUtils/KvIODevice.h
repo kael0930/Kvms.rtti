@@ -26,31 +26,31 @@ public:
 	virtual bool open(Kv::OpenMode mode);
 	virtual void close();
 
-	virtual qint64 pos() const;
-	virtual qint64 size() const;
-	virtual bool seek(qint64 pos);
+	virtual kint64 pos() const;
+	virtual kint64 size() const;
+	virtual bool seek(kint64 pos);
 	virtual bool atEnd() const;
 	virtual bool reset();
 
-	virtual qint64 bytesAvailable() const;
-	virtual qint64 bytesToWrite() const;
+	virtual kint64 bytesAvailable() const;
+	virtual kint64 bytesToWrite() const;
 
-	qint64 read(char *data, qint64 maxlen);
-	KvByteArray read(qint64 maxlen);
+	kint64 read(char *data, kint64 maxlen);
+	KvByteArray read(kint64 maxlen);
 	KvByteArray readAll();
-	qint64 readLine(char *data, qint64 maxlen);
-	KvByteArray readLine(qint64 maxlen = 0);
+	kint64 readLine(char *data, kint64 maxlen);
+	KvByteArray readLine(kint64 maxlen = 0);
 	virtual bool canReadLine() const;
 
-	qint64 write(const char *data, qint64 len);
-	qint64 write(const char *data);
-	inline qint64 write(const KvByteArray &data)
+	kint64 write(const char *data, kint64 len);
+	kint64 write(const char *data);
+	inline kint64 write(const KvByteArray &data)
 	{
 		return write(data.constData(), data.size());
 	}
 
-//	qint64 peek(char *data, qint64 maxlen);
-//	KvByteArray peek(qint64 maxlen);
+//	kint64 peek(char *data, kint64 maxlen);
+//	KvByteArray peek(kint64 maxlen);
 
 //	virtual bool waitForReadyRead(int msecs);
 //	virtual bool waitForBytesWritten(int msecs);
@@ -62,9 +62,9 @@ public:
 	KvString errorString() const;
 
 protected:
-	virtual qint64 readData(char *data, qint64 maxlen) = 0;
-	virtual qint64 readLineData(char *data, qint64 maxlen);
-	virtual qint64 writeData(const char *data, qint64 len) = 0;
+	virtual kint64 readData(char *data, kint64 maxlen) = 0;
+	virtual kint64 readLineData(char *data, kint64 maxlen);
+	virtual kint64 writeData(const char *data, kint64 len) = 0;
 
 	void setOpenMode(Kv::OpenMode openMode);
 	

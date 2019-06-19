@@ -54,7 +54,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;__STDC_NO_COMPLEX__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../gtest_main;../Kvms;../KvGlobal;../KvUtils</AdditionalIncludeDirectories>
-      <PreprocessToFile>true</PreprocessToFile>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -12,6 +12,84 @@
 * \a MethodType might be MethodSignal or MethodSlot, or 0 to match everything.
 * \a normalizeStringData set to true if we should do a second pass for old moc generated files normalizing all the symbols.
 */
+
+static inline const KvMetaObjectPrivate *priv(const uint* data)
+{
+	return reinterpret_cast<const KvMetaObjectPrivate*>(data);
+}
+
+static inline const KvByteArray stringData(const KvMetaObject *mo, int index)
+{
+	KV_ASSERT(priv(mo->d.data)->revision >= 7);
+	const KvByteArrayDataPtr data = { const_cast<KvByteArrayData*>(&mo->d.stringdata[index]) };
+	KV_ASSERT(data.ptr->ref.isStatic());
+	KV_ASSERT(data.ptr->alloc == 0);
+	KV_ASSERT(data.ptr->capacity == 0);
+	KV_ASSERT(data.ptr->size >= 0);
+	return data;
+}
+
+static inline const char *rawStringData(const KvMetaObject *mo, int index)
+{
+	return stringData(mo, index).data();
+}
+
+static inline KvByteArray typeNameFromTypeInfo(const KvMetaObject *mo, uint typeInfo)
+{
+	//if (typeInfo & IsUnresolvedType) {
+	//	return stringData(mo, typeInfo & TypeNameIndexMask);
+	//}
+	//else 
+	{
+		const char *t = KvMetaType::typeName(typeInfo);
+		return KvByteArray::fromRawData(t, kvstrlen(t));
+	}
+}
+
+static inline const char *rawTypeNameFromTypeInfo(const KvMetaObject *mo, uint typeInfo)
+{
+	return typeNameFromTypeInfo(mo, typeInfo).constData();
+}
+
+static inline int typeFromTypeInfo(const KvMetaObject *mo, uint typeInfo)
+{
+	//if (!(typeInfo & IsUnresolvedType))
+		return typeInfo;
+	//return KvMetaType::type(stringData(mo, typeInfo & TypeNameIndexMask));
+}
+
+static inline const char *objectClassName(const KvMetaObject *m)
+{
+	return rawStringData(m, priv(m->d.data)->className);
+}
+
+static bool methodMatch(const KvMetaObject *m, int handle,
+	const KvByteArray &name, int argc,
+	const KvArgumentType *types)
+{
+	KV_ASSERT(priv(m->d.data)->revision >= 7);
+	if (int(m->d.data[handle + 1]) != argc)
+		return false;
+
+	if (stringData(m, m->d.data[handle]) != name)
+		return false;
+
+	int paramsIndex = m->d.data[handle + 2] + 1;
+	for (int i = 0; i < argc; ++i) {
+		uint typeInfo = m->d.data[paramsIndex + i];
+		if (types[i].type()) {
+			if (types[i].type() != typeFromTypeInfo(m, typeInfo))
+				return false;
+		}
+		else {
+			if (types[i].name() != typeNameFromTypeInfo(m, typeInfo))
+				return false;
+		}
+	}
+
+	return true;
+}
+
 template<int MethodType>
 static inline int indexOfMethodRelative(const KvMetaObject **baseObject,
 	const char *method,
@@ -19,22 +97,39 @@ static inline int indexOfMethodRelative(const KvMetaObject **baseObject,
 {
 	for (const KvMetaObject *m = *baseObject; m; m = m->superClass())
 	{
-		int i = (MethodType == Kv::MethodSignal && priv(m->d.data)->revision >= 4)
+		int i = (MethodType == Kv::MethodSignal)
 			? (priv(m->d.data)->signalCount - 1) : (priv(m->d.data)->methodCount - 1);
-		const int end = (MethodType == Kv::MethodSlot && priv(m->d.data)->revision >= 4)
+		const int end = (MethodType == Kv::MethodSlot)
 			? (priv(m->d.data)->signalCount) : 0;
+
 		if (!normalizeStringData)
 		{
-			for (; i >= end; --i)
+			if (priv(m->d.data)->revision >= 7)
 			{
-				const char *stringdata = m->d.stringdata + m->d.data[priv(m->d.data)->methodData + 5 * i];
-				if (method[0] == stringdata[0] && strcmp(method + 1, stringdata +1) == 0)
-				{
-					*baseObject = m;
-					return i;
+				for (; i >= end; --i) {
+					int handle = priv(m->d.data)->methodData + 5 * i;
+					//if (methodMatch(m, handle, name, argc, types)) {
+					//	*baseObject = m;
+					//	return i;
+					//}
 				}
 			}
+#if 0
+			else if (priv(m->d.data)->revision >= 4)
+			{
+				for (; i >= end; --i)
+				{
+					const char *stringdata = m->d.stringdata + m->d.data[priv(m->d.data)->methodData + 5 * i];
+					if (method[0] == stringdata[0] && strcmp(method + 1, stringdata + 1) == 0)
+					{
+						*baseObject = m;
+						return i;
+					}
+				}
+			}
+#endif
 		}
+#if 0
 		else if ( priv(m->d.data)->revision < 5)
 		{
 			for (; i >= end; --i)
@@ -48,6 +143,7 @@ static inline int indexOfMethodRelative(const KvMetaObject **baseObject,
 				}
 			}
 		}
+#endif
 	}
 
 	return -1;
@@ -85,16 +181,49 @@ int KvMetaObjectPrivate::originalClone(const KvMetaObject *mobj, int local_metho
 	return local_method_index;
 }
 
+static void argumentTypesFromString(const char *str, const char *end,
+	KvArgumentTypeArray &types)
+{
+	KV_ASSERT(str <= end);
+	while (str != end) 
+	{
+		if (!types.isEmpty())
+			++str; // Skip comma
+		const char *begin = str;
+		int level = 0;
+		while (str != end && (level > 0 || *str != ',')) 
+		{
+			if (*str == '<')
+				++level;
+			else if (*str == '>')
+				--level;
+			++str;
+		}
+		types += KvArgumentType(KvByteArray(begin, str - begin));
+	}
+}
+
+KvByteArray KvMetaObjectPrivate::decodeMethodSignature(const char *signature, KvArgumentTypeArray &types)
+{
+	KV_ASSERT(signature != 0);
+	const char *lparens = strchr(signature, '(');
+	if (!lparens)
+		return KvByteArray();
+	const char *rparens = strrchr(lparens + 1, ')');
+	if (!rparens || *(rparens + 1))
+		return KvByteArray();
+	int nameLength = lparens - signature;
+	argumentTypesFromString(lparens + 1, rparens, types);
+	return KvByteArray::fromRawData(signature, nameLength);
+}
+
 //////////////////////////////////////////////////////////////////////////
 
-static inline const KvMetaObjectPrivate *priv(const uint* data)
-{
-	return reinterpret_cast<const KvMetaObjectPrivate*>(data);
-}
 
 const char * KvMetaObject::className() const
 {
-	return d.stringdata;
+	//return d.stringdata;
+	return objectClassName(this);
 }
 
 const KvMetaObject * KvMetaObject::superClass() const
@@ -197,7 +326,11 @@ int KvMetaObject::indexOfProperty(const char *name) const
 		const KvMetaObjectPrivate *d = priv(m->d.data);
 		for (int i = d->propertyCount - 1; i >= 0; --i)
 		{
+#if 0
 			const char *prop = m->d.stringdata + m->d.data[d->propertyData + 3 * i];
+#else
+			const char *prop = rawStringData(m, m->d.data[d->propertyData + 3 * i]);
+#endif
 			if (name[0] == prop[0] && strcmp(name + 1, prop + 1) == 0) {
 				i += m->propertyOffset();
 				return i;
@@ -232,7 +365,7 @@ KvMetaProperty KvMetaObject::property(int index) const
 	{
 		int handle = priv(d.data)->propertyData + 3 * i;
 		int flags = d.data[handle + 2];
-		const char * type = d.stringdata + d.data[handle + 1];
+		//const char * type = d.stringdata + d.data[handle + 1];
 		result.mobj = this;
 		result.handle = handle;
 		result.idx = i;
@@ -251,10 +384,10 @@ bool KvMetaObject::checkConnectArgs(const char *signal, const char *method)
 	const char *s2 = method;
 	while (*s1++ != '(') {}                        // scan to first '('
 	while (*s2++ != '(') {}
-	if (*s2 == ')' || kstrcmp(s1, s2) == 0)        // method has no args or
+	if (*s2 == ')' || kvstrcmp(s1, s2) == 0)        // method has no args or
 		return true;                                //   exact match
-	int s1len = kstrlen(s1);
-	int s2len = kstrlen(s2);
+	int s1len = kvstrlen(s1);
+	int s2len = kvstrlen(s2);
 	if (s2len < s1len && strncmp(s1, s2, s2len - 1) == 0 && s1[s2len - 1] == ',')
 		return true;                                // method has less args
 	return false;
@@ -276,7 +409,7 @@ static inline bool is_space(char s)
 }
 #endif
 
-static void qRemoveWhitespace(const char *s, char *d)
+static void kvRemoveWhitespace(const char *s, char *d)
 {
 	char last = 0;
 	while (*s && is_space(*s))
@@ -294,7 +427,7 @@ static void qRemoveWhitespace(const char *s, char *d)
 	*d = '\0';
 }
 
-static char *qNormalizeType(char *d, int &templdepth, KvByteArray &result)
+static char *kvNormalizeType(char *d, int &templdepth, KvByteArray &result)
 {
 	const char *t = d;
 	while (*d && (templdepth
@@ -319,7 +452,7 @@ KvByteArray KvMetaObject::normalizedSignature(const char *method)
 	int len = int(strlen(method));
 	KvVarLengthArray<char> stackbuf(len + 1);
 	char *d = stackbuf.data();
-	qRemoveWhitespace(method, d);
+	kvRemoveWhitespace(method, d);
 
 	result.reserve(len);
 
@@ -327,7 +460,7 @@ KvByteArray KvMetaObject::normalizedSignature(const char *method)
 	int templdepth = 0;
 	while (*d) {
 		if (argdepth == 1) {
-			d = qNormalizeType(d, templdepth, result);
+			d = kvNormalizeType(d, templdepth, result);
 			if (!*d) //most likely an invalid signature.
 				break;
 		}
@@ -337,6 +470,21 @@ KvByteArray KvMetaObject::normalizedSignature(const char *method)
 			--argdepth;
 		result += *d++;
 	}
+
+	return result;
+}
+
+KvByteArray KvMetaObject::normalizedType(const char *type)
+{
+	KvByteArray result;
+
+	if (!type || !*type)
+		return result;
+
+	KvVarLengthArray<char> stackbuf(kvstrlen(type) + 1);
+	kvRemoveWhitespace(type, stackbuf.data());
+	int templdepth = 0;
+	kvNormalizeType(stackbuf.data(), templdepth, result);
 
 	return result;
 }
@@ -387,7 +535,12 @@ const char * KvMetaProperty::name() const
 		return 0;
 	}
 	int handle = priv(mobj->d.data)->propertyData + 3 * idx;
+#if 0
 	return mobj->d.stringdata + mobj->d.data[handle];
+#else
+	return rawStringData(mobj, mobj->d.data[handle]);
+#endif
+
 }
 
 const char * KvMetaProperty::typeName() const
@@ -395,7 +548,12 @@ const char * KvMetaProperty::typeName() const
 	if (!mobj)
 		return 0;
 	int handle = priv(mobj->d.data)->propertyData + 3 * idx;
+#if 0
 	return mobj->d.stringdata + mobj->d.data[handle + 1];
+#else
+	return rawTypeNameFromTypeInfo(mobj, mobj->d.data[handle + 1]);
+#endif
+
 }
 
 KvVariant::Type KvMetaProperty::type() const
@@ -461,7 +619,10 @@ KvVariant KvMetaProperty::read(const KvObject *obj) const
 	{
 		int handle = priv(mobj->d.data)->propertyData + 3 * idx;
 		uint flags = mobj->d.data[handle + 2];
-		const char *typeName = mobj->d.stringdata + mobj->d.data[handle + 1];
+		const char *typeName = 0;
+#if 0
+		typeName = mobj->d.stringdata + mobj->d.data[handle + 1];
+
 		t = (flags >> 24);
 		if (t == 0xff)
 		{
@@ -480,10 +641,22 @@ KvVariant KvMetaProperty::read(const KvObject *obj) const
 		{
 			if (t == KvVariant::Invalid)
 			{
-				printf("KvMetaProperty::read: Unable to handle unregistered datatype '%s' for property '%s::%s'", 
+				printf("KvMetaProperty::read: Unable to handle unregistered datatype '%s' for property '%s::%s'",
 					typeName, mobj->className(), name());
 			}
 		}
+#else
+		uint typeInfo = mobj->d.data[handle + 1];
+		if (!(typeInfo & Kv::IsUnresolvedType))
+			t = typeInfo;
+		else {
+			typeName = rawStringData(mobj, typeInfo & Kv::TypeNameIndexMask);
+			t = KvMetaType::type(typeName);
+		}
+		if (t == KvMetaType::UnknownType) {
+			const char *typeName = rawStringData(mobj, typeInfo & Kv::TypeNameIndexMask);
+		}
+#endif
 	}
 
 	// -1 (unchanged): normal qt_metacall, result stored in argv[0]
@@ -538,6 +711,7 @@ bool KvMetaProperty::write(KvObject *obj, const KvVariant &value) const
 	else
 	{
 		int handle = priv(mobj->d.data)->propertyData + 3 * idx;
+#if 0
 		uint flags = mobj->d.data[handle + 2];
 		t = flags >> 24;
 		if (t == 0xff)
@@ -562,12 +736,41 @@ bool KvMetaProperty::write(KvObject *obj, const KvVariant &value) const
 		{
 			return false;
 		}
-		if (t != KvVariant::LastType 
-			&& t != (uint)value.userType() 
+		if (t != KvVariant::LastType
+			&& t != (uint)value.userType()
 			&& (t < KvMetaType::User && !v.convert((KvVariant::Type)t)))
 		{
 			return false;
 		}
+
+#else
+		const char *typeName = 0;
+		KV_ASSERT(priv(mobj->d.data)->revision >= 7);
+		uint typeInfo = mobj->d.data[handle + 1];
+		if (!(typeInfo & Kv::IsUnresolvedType))
+			t = typeInfo;
+		else {
+			typeName = rawStringData(mobj, typeInfo & Kv::TypeNameIndexMask);
+			t = KvMetaType::type(typeName);
+			//if (t == KvMetaType::UnknownType)
+			//	t = registerPropertyType();
+			//if (t == KvMetaType::UnknownType)
+			//	return false;
+		}
+		if (t != KvMetaType::QVariant && int(t) != value.userType()) 
+		{
+			if (!value.isValid()) 
+			{
+				//if (isResettable())
+				//	return reset(object);
+				//v = QVariant(t, 0);
+			}
+			else if (!v.convert((KvVariant::Type)t)) 
+			{
+				return false;
+			}
+		}
+#endif
 	}
 
 	// -1 (unchanged): normal qt_metacall, result stored in argv[0]

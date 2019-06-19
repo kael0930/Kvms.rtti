@@ -3,6 +3,54 @@
 
 #include "KvObject.h"
 #include "KvObjectPrivate.h"
+#include "KvVarLengthArray.h"
+
+extern int kvMetaTypeTypeInternal(const char *);
+
+class KvArgumentType
+{
+public:
+	KvArgumentType(int type)
+		: _type(type)
+	{}
+	KvArgumentType(const KvByteArray &name)
+		: _type(kvMetaTypeTypeInternal(name.constData())), _name(name)
+	{}
+	KvArgumentType()
+		: _type(0)
+	{}
+	int type() const
+	{
+		return _type;
+	}
+	KvByteArray name() const
+	{
+		if (_type && _name.isEmpty())
+			const_cast<KvArgumentType *>(this)->_name = KvMetaType::typeName(_type);
+		return _name;
+	}
+	bool operator==(const KvArgumentType &other) const
+	{
+		if (_type && other._type)
+			return _type == other._type;
+		else
+			return name() == other.name();
+	}
+	bool operator!=(const KvArgumentType &other) const
+	{
+		if (_type && other._type)
+			return _type != other._type;
+		else
+			return name() != other.name();
+	}
+
+private:
+	int _type;
+	KvByteArray _name;
+};
+KV_DECLARE_TYPEINFO(KvArgumentType, KV_MOVABLE_TYPE)
+
+typedef KvVarLengthArray<KvArgumentType, 10> KvArgumentTypeArray;
 
 struct KvMetaObjectPrivate
 {
@@ -30,6 +78,9 @@ struct KvMetaObjectPrivate
 		const char *slot,
 		bool normalizeStringData);
 	static int originalClone(const KvMetaObject *obj, int local_method_index);
+
+	static KvByteArray decodeMethodSignature(const char *signature,
+		KvArgumentTypeArray &types);
 
 	//defined in kvobject.cpp
 	enum DisconnectType { DisconnectAll, DisconnectOne };

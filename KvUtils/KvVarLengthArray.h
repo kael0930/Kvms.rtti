@@ -19,16 +19,17 @@ public:
 	}
 
 	inline ~KvVarLengthArray() {
-		//if (QTypeInfo<T>::isComplex) 
-		//{
-		//	T *i = ptr + s;
-		//	while (i-- != ptr)
-		//		i->~T();
-		//}
+		if (KvTypeInfo<T>::isComplex)
+		{
+			T *i = ptr + s;
+			while (i-- != ptr)
+				i->~T();
+		}
 		if (ptr != reinterpret_cast<T *>(array))
 			kvFree(ptr);
 	}
-	inline KvVarLengthArray<T, Prealloc> &operator=(const KvVarLengthArray<T, Prealloc> &other)
+	inline KvVarLengthArray<T, Prealloc> &operator=
+		(const KvVarLengthArray<T, Prealloc> &other)
 	{
 		if (this != &other)
 		{
@@ -71,14 +72,10 @@ public:
 		if (s == a)   // i.e. s != 0
 			realloc(s, s << 1);
 		const int idx = s++;
-		//if (QTypeInfo<T>::isComplex) 
-		//{
-		//	new (ptr + idx) T(t);
-		//}
-		//else 
-		{
-			ptr[idx] = t;
-		}
+		if (KvTypeInfo<T>::isComplex)
+			new (ptr + idx) T(std::move(t));
+		else
+			ptr[idx] = std::move(t);
 	}
 
 	void append(const T *buf, int size);
@@ -103,8 +100,7 @@ private:
 	int s;      // size
 	T *ptr;     // data
 	union {
-		// ### next: Use 'Prealloc * sizeof(T)' as array size
-		char array[sizeof(qint64)* (((Prealloc * sizeof(T)) / sizeof(qint64)) + 1)];
+		char array[Prealloc * sizeof(T)];
 	};
 };
 
@@ -120,11 +116,11 @@ inline KvVarLengthArray<T, Prealloc>::KvVarLengthArray(int size /*= 0*/)
 		ptr = reinterpret_cast<T *>(array);
 		a = Prealloc;
 	}
-	//if (QTypeInfo<T>::isComplex) {
-	//	T *i = ptr + s;
-	//	while (i != ptr)
-	//		new (--i) T;
-	//}
+	if (KvTypeInfo<T>::isComplex) {
+		T *i = ptr + s;
+		while (i != ptr)
+			new (--i) T;
+	}
 }
 
 
@@ -140,13 +136,13 @@ void KvVarLengthArray<T, Prealloc>::append(const T *buf, int size)
 	if (asize >= a)
 		realloc(s, kvMax(s * 2, asize));
 
-	//if (QTypeInfo<T>::isComplex) 
-	//{
-	//	// call constructor for new objects (which can throw)
-	//	while (s < asize)
-	//		new (ptr + (s++)) T(*abuf++);
-	//}
-	//else 
+	if (KvTypeInfo<T>::isComplex)
+	{
+		// call constructor for new objects (which can throw)
+		while (s < asize)
+			new (ptr + (s++)) T(*abuf++);
+	}
+	else 
 	{
 		kvMemCopy(&ptr[s], buf, size * sizeof(T));
 		s = asize;
@@ -169,54 +165,58 @@ inline void KvVarLengthArray<T, Prealloc>::realloc(int asize, int aalloc)
 			s = 0;
 			a = aalloc;
 
-			//if (QTypeInfo<T>::isStatic)
-			//{
-			//	QT_TRY{
-			//		// copy all the old elements
-			//		while (s < copySize) {
-			//			new (ptr + s) T(*(oldPtr + s));
-			//			(oldPtr + s)->~T();
-			//			s++;
-			//		}
-			//	} QT_CATCH(...) {
-			//		// clean up all the old objects and then free the old ptr
-			//		int sClean = s;
-			//		while (sClean < osize)
-			//			(oldPtr + (sClean++))->~T();
-			//		if (oldPtr != reinterpret_cast<T *>(array) && oldPtr != ptr)
-			//			qFree(oldPtr);
-			//		QT_RETHROW;
-			//	}
-			//}
-			//else 
+			if (KvTypeInfo<T>::isStatic)
+			{
+				KV_TRY{
+					// copy all the old elements
+					while (s < copySize) 
+					{
+						new (ptr + s) T(*(oldPtr + s));
+						(oldPtr + s)->~T();
+						s++;
+					}
+				} 
+				KV_CATCH(...) 
+				{
+					// clean up all the old objects and then free the old ptr
+					int sClean = s;
+					while (sClean < osize)
+						(oldPtr + (sClean++))->~T();
+					if (oldPtr != reinterpret_cast<T *>(array) && oldPtr != ptr)
+						kvFree(oldPtr);
+					KV_RETHROW;
+				}
+			}
+			else 
 			{
 				kvMemCopy(ptr, oldPtr, copySize * sizeof(T));
 			}
 		}
-		else {
+		else 
+		{
 			ptr = oldPtr;
 			return;
 		}
 	}
 	s = copySize;
 
-	//if (QTypeInfo<T>::isComplex) 
-	//{
-	//	// destroy remaining old objects
-	//	while (osize > asize)
-	//		(oldPtr + (--osize))->~T();
-	//}
+	if (KvTypeInfo<T>::isComplex)
+	{
+		// destroy remaining old objects
+		while (osize > asize)
+			(oldPtr + (--osize))->~T();
+	}
 
 	if (oldPtr != reinterpret_cast<T *>(array) && oldPtr != ptr)
 		kvFree(oldPtr);
 
-	//if (QTypeInfo<T>::isComplex) 
-	//{
-	//	// call default constructor for new objects (which can throw)
-	//	while (s < asize)
-	//		new (ptr + (s++)) T;
-	//}
-	//else 
+	if (KvTypeInfo<T>::isComplex)
+	{
+		// call default constructor for new objects (which can throw)
+		while (s < asize)
+			new (ptr + (s++)) T;
+	}
+	else 
 	{
 		s = asize;
 	}

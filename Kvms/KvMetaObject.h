@@ -67,10 +67,17 @@ struct KV_CORE_EXPORT KvMetaObject
 	struct  // private data
 	{
 		const KvMetaObject *superdata;
-		const char *stringdata;
+		//const char *stringdata; //revision 4
+		const KvByteArrayData *stringdata; //revision 7
 		const uint *data;
+
+		//typedef void(*StaticMetacallFunction)(KvObject *, KvMetaObject::Call, int, void **);
+		//StaticMetacallFunction static_metacall;
+		//const KvMetaObject * const *relatedMetaObjects;
+		//void *extradata; //reserved for future use
 		const void *extradata;
 	} d;
+
 };
 
 struct KvMetaObjectExtraData
